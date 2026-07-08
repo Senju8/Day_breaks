@@ -24,7 +24,7 @@ namespace DecoyFortress
         /// 無効の場合は敵の攻撃対象にならず、
         /// プレイヤー一定時間が近づくと有効化される。
         /// </summary>
-        [SerializeField] private bool FortressEnabled = false;
+        [SerializeField] private bool fortressEnabled = false;
 
         /// <summary>
         /// 罠砦の初期化処理
@@ -47,6 +47,7 @@ namespace DecoyFortress
             if(fortressHP - damageAmount <= 0)
             {
                 fortressHP = 0;
+                fortressEnabled = false;
                 Debug.Log("罠砦が壊れた");
             }
             else
@@ -64,7 +65,7 @@ namespace DecoyFortress
         /// <returns>罠砦の有効化状隊</returns>
         public bool GetEnable()
         {
-            return FortressEnabled;
+            return fortressEnabled;
         }
     }
 }

@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 190597363}
   - component: {fileID: 190597365}
   - component: {fileID: 190597364}
+  - component: {fileID: 190597366}
   m_Layer: 0
   m_Name: Square
   m_TagString: Untagged
@@ -257,6 +258,18 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &190597366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 190597362}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aeb7738e0c684044b99731c939a17e26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitboxMarker
 --- !u!1 &297367312
 GameObject:
   m_ObjectHideFlags: 0
@@ -291,6 +304,7 @@ MonoBehaviour:
   enemyDamage: 10
   enemyAttackRange: 1.5
   enemyCoolDown: 2
+  selfRadius: 0.5
   retargetInterval: 1
 --- !u!4 &297367314
 Transform:
@@ -342,6 +356,7 @@ MonoBehaviour:
   enemyDamage: 10
   enemyAttackRange: 1.5
   enemyCoolDown: 2
+  selfRadius: 0.5
   retargetInterval: 1
 --- !u!4 &426717513
 Transform:
@@ -370,6 +385,7 @@ GameObject:
   - component: {fileID: 672855103}
   - component: {fileID: 672855105}
   - component: {fileID: 672855104}
+  - component: {fileID: 672855106}
   m_Layer: 0
   m_Name: Circle
   m_TagString: Untagged
@@ -487,6 +503,18 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &672855106
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 672855102}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aeb7738e0c684044b99731c939a17e26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitboxMarker
 --- !u!1 &891052786
 GameObject:
   m_ObjectHideFlags: 0
@@ -595,8 +623,9 @@ MonoBehaviour:
   enemyHP: 100
   enemySpeed: 1
   enemyDamage: 10
-  enemyAttackRange: 1
+  enemyAttackRange: 0.1
   enemyCoolDown: 2
+  selfRadius: 0.5
   retargetInterval: 1
 --- !u!1 &1021947775
 GameObject:
@@ -643,7 +672,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c4be8005db24b341a5f8689d172edd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DecoyFortress.DecoyFortressManager
-  FortressEnabled: 0
+  fortressEnabled: 1
 --- !u!1 &1401615120
 GameObject:
   m_ObjectHideFlags: 0
@@ -700,6 +729,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1621075828}
   - component: {fileID: 1621075829}
+  - component: {fileID: 1621075830}
+  - component: {fileID: 1621075831}
   m_Layer: 0
   m_Name: Triangle
   m_TagString: Untagged
@@ -781,6 +812,64 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &1621075830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1621075827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aeb7738e0c684044b99731c939a17e26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitboxMarker
+--- !u!61 &1621075831
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1621075827}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0.14874879}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.28866667}
+    oldSize: {x: 1, y: 1}
+    newSize: {x: 1, y: 1}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1, y: 0.8748309}
+  m_EdgeRadius: 0
 --- !u!1 &1651453732
 GameObject:
   m_ObjectHideFlags: 0
@@ -876,6 +965,7 @@ GameObject:
   - component: {fileID: 1671883714}
   - component: {fileID: 1671883715}
   - component: {fileID: 1671883716}
+  - component: {fileID: 1671883717}
   m_Layer: 0
   m_Name: Circle
   m_TagString: Untagged
@@ -948,7 +1038,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -993,6 +1083,18 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.5
+--- !u!114 &1671883717
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1671883713}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aeb7738e0c684044b99731c939a17e26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitboxMarker
 --- !u!1 &1676087366
 GameObject:
   m_ObjectHideFlags: 0
@@ -1004,6 +1106,7 @@ GameObject:
   - component: {fileID: 1676087367}
   - component: {fileID: 1676087369}
   - component: {fileID: 1676087368}
+  - component: {fileID: 1676087370}
   m_Layer: 0
   m_Name: Circle
   m_TagString: Untagged
@@ -1121,6 +1224,18 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &1676087370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1676087366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aeb7738e0c684044b99731c939a17e26, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitboxMarker
 --- !u!1 &1744286071
 GameObject:
   m_ObjectHideFlags: 0
