@@ -25,6 +25,8 @@ namespace Enemy
         {
             foreach(var enemy in enemies)
             {
+                enemy.Initialize();
+
                 enemy.SetTargetCandidates(
                     new List<IDamageable>()
                     {

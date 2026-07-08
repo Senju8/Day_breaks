@@ -47,6 +47,9 @@ namespace Enemy
         [Header("敵の攻撃頻度(クールダウン)")]
         [SerializeField] private float enemyCoolDown = 2f;
 
+        [Header("自身のコリダーの判定")]
+        [SerializeField] private float selfRadius = 10f;
+
         /// <summary>
         /// 敵の現在の状隊
         /// </summary>
@@ -59,7 +62,26 @@ namespace Enemy
 
         private IDamageable currentTarget;
 
+        [Header("再探索の間隔(秒)")]
+        [SerializeField] private float retargetInterval = 1f;
+
+        private float retargetTimer;
+
         private float attackTimer;
+
+        public void Initialize()
+        {
+            var hitboxMarker = GetComponentInChildren<HitboxMarker>();
+
+            if (hitboxMarker == null) return;
+
+            var myCollider = hitboxMarker.HitCollider;
+
+            if (myCollider is CircleCollider2D circle)
+            {
+                selfRadius = circle.radius * Mathf.Max(circle.transform.lossyScale.x, circle.transform.lossyScale.y);
+            }
+        }
 
         public void OnUpdate()
         {
@@ -92,23 +114,51 @@ namespace Enemy
         private void HandleChasing()
         {
             // ターゲットが存在しない場合、再探索
-            if (currentTarget == null || currentTarget.transform == null)
+            if (!IsTargetValid(currentTarget))
             {
                 FindNearestTarget();
                 if (currentTarget == null) return;  // ターゲットが全くない場合
             }
+            else
+            {
+                // 一定時間でより近い有効なターゲットがいないか再探索
+                retargetTimer += Time.deltaTime;
+                if (retargetTimer >= retargetInterval)
+                {
+                    retargetTimer = 0f;
+                    FindNearestTarget();
+                }
+            }
+
+            // 移動前に、表面までの距離を先に計算しておく
+            float distance = GetSurfaceDistance(currentTarget);
+
+            if (distance < enemyAttackRange)
+            {
+                // すでに攻撃範囲内なら移動せず攻撃状態へ
+                currentState = EnemyState.Attacking;
+                attackTimer = enemyCoolDown;
+                return;
+            }
 
             // ターゲットの方向へ移動
             Vector3 direction = (currentTarget.transform.position - transform.position).normalized;
-            transform.position += direction * enemySpeed * Time.deltaTime;
 
-            // 距離判定
-            float distance = Vector3.Distance(transform.position, currentTarget.transform.position);
-            if (distance < enemyAttackRange)
-            {
-                currentState = EnemyState.Attacking;
-                attackTimer = enemyCoolDown; // 攻撃のクールダウンタイマーをリセット
-            }
+            // 移動してもいい最大量(行きすぎない量)
+            float moveAmount = Mathf.Min(enemySpeed * Time.deltaTime, distance - enemyAttackRange);
+            moveAmount = Mathf.Max(moveAmount, 0f); //　負値を防ぐ
+
+            transform.position += moveAmount * direction;
+
+            //transform.position += direction * enemySpeed * Time.deltaTime;
+
+            //// 距離判定
+            //float distance = GetSurfaceDistance(currentTarget);
+            //if (distance < enemyAttackRange)
+            //{
+            //    currentState = EnemyState.Attacking;
+            //    attackTimer = enemyCoolDown; // 攻撃のクールダウンタイマーをリセット
+            //}
         }
 
         /// <summary>
@@ -128,8 +178,7 @@ namespace Enemy
 
             foreach (var candidate in targetCandidates)
             {
-                // すでに破壊されているものはスキップ
-                if (candidate == null || candidate.transform == null) continue;
+                if (!IsTargetValid(candidate)) continue;
 
                 float distance = Vector3.Distance(currentPosition, candidate.transform.position);
                 if (distance < shortestDistance)
@@ -149,8 +198,9 @@ namespace Enemy
         private void HandleAttacking()
         {
             // 攻撃中にターゲットが消滅した場合、追跡状隊に
-            if (currentTarget == null || currentTarget.transform == null)
+            if (!IsTargetValid(currentTarget))
             {
+                currentTarget = null;
                 currentState = EnemyState.Chasing;
                 return;
             }
@@ -191,6 +241,38 @@ namespace Enemy
                     Debug.Log($"{currentTarget.transform.name}に{enemyDamage}のダメージを与えた");
                 }
             }
+        }
+
+        
+        /// <summary>
+        /// 現在のターゲットが有効かどうかを判定する
+        /// (破壊、無効化された場合はfalse)
+        /// </summary>
+        /// <param name="target"></param>
+        /// <returns></returns>
+        private bool IsTargetValid(IDamageable target)
+        {
+            // すでに破壊されているものはスキップ
+            if (target == null || target.transform == null) return false;
+
+            // 無効化されている対象はスキップ(有効化前の罠砦など)
+            if (target is IEnable enable && !enable.GetEnable()) return false;
+
+            return true;
+        }
+
+        private float GetSurfaceDistance(IDamageable target)
+        {
+            var hitBoxMarker = target.transform.GetComponentInChildren<HitboxMarker>();
+            if(hitBoxMarker != null)
+            {
+                // ターゲットのコリダーの表面までの最短距離
+                Vector2 closePoint = hitBoxMarker.HitCollider.ClosestPoint(transform.position);
+                return Vector2.Distance(transform.position, closePoint) - selfRadius;
+            }
+
+            // コリダーがない場合は中心点間の距離にフォールバック
+            return Vector2.Distance(transform.position,target.transform.position);
         }
     }
 }
