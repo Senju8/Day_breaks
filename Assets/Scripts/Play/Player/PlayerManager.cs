@@ -20,7 +20,7 @@ namespace Player
         public static readonly PlayerManager INSTANCE = new();
 
         /// <summary>
-        /// プレイヤーとして扱うGameObject
+        /// プレイヤーとして扱うGameObjectでnullにすることもできる
         /// </summary>
         private GameObject playerObject;
 
@@ -70,8 +70,8 @@ namespace Player
         }
 
         /// <summary>
-        /// <para>GameObjectを登録する</para>
-        /// <para>登録されたGameObjectはプレイヤーとして扱われ、移動や射撃などのアクションが可能となる</para>
+        /// <para>任意のGameObjectをプレイヤーとして登録する</para>
+        /// <para>登録されたGameObjectは、移動や射撃などのアクションが可能となる</para>
         /// </summary>
         /// <param name="gameObject">登録するGameObject</param>
         public void SetPlayer(GameObject gameObject)
@@ -175,24 +175,35 @@ namespace Player
             if (!shootAction.WasPressedThisFrame())
                 return;
 
-            // マウスカーソルの座標を取得
-            Vector2 cursorPos = cursorAction.ReadValue<Vector2>();
-            Vector3 shooterPos = playerContext.PlayerShooter ? playerObject.transform.position : playerContext.PlayerShooter.transform.position;
-            Vector3 aimPos = Camera.main ? Camera.main.ScreenToWorldPoint(new Vector3(cursorPos.x, cursorPos.y, 0F)) : shooterPos;
-
-            // プレイヤーからマウスカーソルへの方向を取得
-            Vector3 aimDir = Vector3.Normalize(new Vector3(aimPos.x, aimPos.y, 0F) - new Vector3(shooterPos.x, shooterPos.y, 0F));
-
-            // 弾のスポーン
-            if (playerContext.PlayerBullet)
+            // PlayerContextでPlayerShooterなどにGameObjectが設定されていなかった場合に例外が発生する
+            try
             {
-                UnityEngine.Object.Instantiate(playerContext.PlayerBullet, shooterPos + aimDir * playerContext.BulletSpawnDistance, Quaternion.identity);
+                // マウスカーソルの座標を取得
+                Vector2 cursorPos = cursorAction.ReadValue<Vector2>();
+                Vector3 shooterPos = playerContext.PlayerShooter ? playerObject.transform.position : playerContext.PlayerShooter.transform.position;
+                Vector3 aimPos = Camera.main ? Camera.main.ScreenToWorldPoint(new Vector3(cursorPos.x, cursorPos.y, 0F)) : shooterPos;
+
+                // プレイヤーからマウスカーソルへの方向を取得
+                Vector3 aimDir = Vector3.Normalize(new Vector3(aimPos.x, aimPos.y, 0F) - new Vector3(shooterPos.x, shooterPos.y, 0F));
+
+                // 弾のスポーン
+                if (playerContext.PlayerBullet)
+                {
+                    UnityEngine.Object.Instantiate(playerContext.PlayerBullet, shooterPos + aimDir * playerContext.BulletSpawnDistance, Quaternion.identity);
+                }
+            }
+            catch (UnassignedReferenceException e)
+            {
+                Debug.Log("Player ShooterもしくはPlayer BulletにGame Objectが設定されていません！");
             }
 
             // クールダウンを設定
             playerContext.ShootingCooldown = playerContext.MaxShootingCooldown;
         }
 
+        /// <summary>
+        /// PlayerManager.defaultContextに使用される
+        /// </summary>
         private class DefaultContext : IPlayerContext
         {
             public float Health
