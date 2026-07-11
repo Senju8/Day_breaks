@@ -20,7 +20,8 @@ namespace Player
         public static readonly PlayerManager INSTANCE = new();
 
         /// <summary>
-        /// プレイヤーとして扱うGameObjectでnullにすることもできる
+        /// <para>プレイヤーとして扱うGameObject</para>
+        /// <para>nullにすることもできる</para>
         /// </summary>
         private GameObject playerObject;
 
@@ -175,26 +176,28 @@ namespace Player
             if (!shootAction.WasPressedThisFrame())
                 return;
 
-            // PlayerContextでPlayerShooterなどにGameObjectが設定されていなかった場合に例外が発生する
-            try
+            GameObject shooterObject = playerContext.PlayerBulletShooter;
+
+            // シューターが設定されていない場合はプレイヤー自身をシューターとする
+            if (!shooterObject)
+                shooterObject = playerObject;
+
+            // マウスカーソルの座標を取得
+            Vector2 cursorPos = cursorAction.ReadValue<Vector2>();
+            Vector3 shooterPos = shooterObject.transform.position;
+            Vector3 aimPos = Camera.main ? Camera.main.ScreenToWorldPoint(new Vector3(cursorPos.x, cursorPos.y, 0F)) : shooterPos;
+
+            // プレイヤーからマウスカーソルへの方向を取得
+            Vector3 aimDir = Vector3.Normalize(new Vector3(aimPos.x, aimPos.y, 0F) - new Vector3(shooterPos.x, shooterPos.y, 0F));
+
+            // プレイヤーの弾をスポーン
+            if (playerContext.PlayerBullet)
             {
-                // マウスカーソルの座標を取得
-                Vector2 cursorPos = cursorAction.ReadValue<Vector2>();
-                Vector3 shooterPos = playerContext.PlayerShooter ? playerObject.transform.position : playerContext.PlayerShooter.transform.position;
-                Vector3 aimPos = Camera.main ? Camera.main.ScreenToWorldPoint(new Vector3(cursorPos.x, cursorPos.y, 0F)) : shooterPos;
-
-                // プレイヤーからマウスカーソルへの方向を取得
-                Vector3 aimDir = Vector3.Normalize(new Vector3(aimPos.x, aimPos.y, 0F) - new Vector3(shooterPos.x, shooterPos.y, 0F));
-
-                // 弾のスポーン
-                if (playerContext.PlayerBullet)
-                {
-                    UnityEngine.Object.Instantiate(playerContext.PlayerBullet, shooterPos + aimDir * playerContext.BulletSpawnDistance, Quaternion.identity);
-                }
+                UnityEngine.Object.Instantiate(playerContext.PlayerBullet, shooterPos + aimDir * playerContext.BulletSpawnDistance, Quaternion.identity);
             }
-            catch (UnassignedReferenceException e)
+            else
             {
-                Debug.Log("Player ShooterもしくはPlayer BulletにGame Objectが設定されていません！");
+                Debug.Log("Player BulletにGame Objectが設定されていません！");
             }
 
             // クールダウンを設定
@@ -236,7 +239,7 @@ namespace Player
                 set { }
             }
 
-            public GameObject PlayerShooter
+            public GameObject PlayerBulletShooter
             {
                 get { return null; }
                 set { }

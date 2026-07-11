@@ -35,7 +35,7 @@ namespace Player
         /// <summary>
         /// プレイヤーの弾を射撃するGameObject（シューター）
         /// </summary>
-        GameObject PlayerShooter { get; set; }
+        GameObject PlayerBulletShooter { get; set; }
 
         /// <summary>
         /// プレイヤーの弾がスポーンする発射点からの距離（シューターの位置を基準とする）

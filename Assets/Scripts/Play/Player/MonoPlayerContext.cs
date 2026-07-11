@@ -23,7 +23,7 @@ namespace Player
         [SerializeField] private GameObject playerBullet;
 
         [Header("プレイヤーの弾を射撃するGameObject（シューター）")]
-        [SerializeField] private GameObject playerShooter;
+        [SerializeField] private GameObject playerBulletShooter;
 
         [Header("プレイヤーの弾がスポーンする発射点からの距離（シューターの位置を基準とする）")]
         [SerializeField] private float bulletSpawnDistance = 1F;
@@ -66,10 +66,10 @@ namespace Player
             set { playerBullet = value; }
         }
 
-        public GameObject PlayerShooter
+        public GameObject PlayerBulletShooter
         {
-            get { return playerShooter; }
-            set { playerShooter = value; }
+            get { return playerBulletShooter; }
+            set { playerBulletShooter = value; }
         }
 
         public float BulletSpawnDistance
