@@ -133,7 +133,7 @@ GameObject:
   - component: {fileID: 858482780}
   m_Layer: 0
   m_Name: Main Camera
-  m_TagString: Untagged
+  m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -266,8 +266,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1384109222}
   - component: {fileID: 1384109221}
-  - component: {fileID: 1384109220}
   - component: {fileID: 1384109219}
+  - component: {fileID: 1384109220}
   m_Layer: 0
   m_Name: Debug Player
   m_TagString: Untagged
@@ -299,10 +299,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ce65f6b8678ffb45b2858b1c1174765, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player.MonoPlayerContext
-  health: 0
-  maxHealth: 0
-  movementSpeed: 0
-  sprintSpeed: 0
+  health: 1024
+  maxHealth: 65536
+  movementSpeed: 1
+  sprintSpeed: 3
+  playerBullet: {fileID: 1842711167310674695, guid: 15192bbff1433f140a0ad0bc92105ae8, type: 3}
+  playerBulletShooter: {fileID: 0}
+  bulletSpawnDistance: 1
+  bulletSpeed: 1
+  maxShootingCooldown: 0
+  playerItemSlots:
+  - id: debug_health_display
+    count: 1
+  bindingPlayerItemSlot: 0
 --- !u!212 &1384109221
 SpriteRenderer:
   serializedVersion: 2

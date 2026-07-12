@@ -1,3 +1,6 @@
+using Player.Item;
+using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Player
@@ -36,28 +39,34 @@ namespace Player
         [Header("プレイヤーの射撃後のクールダウンの秒数")]
         [SerializeField] private float maxShootingCooldown = 0F;
 
+        [Header("プレイヤーの所持するアイテムIDのリスト")]
+        [SerializeField] private List<PlayerItemState> playerItemSlots = new();
+
+        [Header("選択中のアイテムスロットの番号")]
+        [SerializeField] private int bindingPlayerItemSlot = 0;
+
         public float Health
         {
             get { return health; }
-            set { health = value; }
+            set { health = Mathf.Clamp(value, 0F, MaxHealth); }
         }
 
         public float MaxHealth
         {
             get { return maxHealth; }
-            set { maxHealth = value; }
+            set { maxHealth = Mathf.Max(0F, value); }
         }
 
         public float MovementSpeed
         {
             get { return movementSpeed; }
-            set { movementSpeed = value; }
+            set { movementSpeed = Mathf.Max(0F, value); }
         }
 
         public float SprintSpeed
         {
             get { return sprintSpeed; }
-            set { sprintSpeed = value; }
+            set { sprintSpeed = Mathf.Max(0F, value); }
         }
 
         public GameObject PlayerBullet
@@ -75,25 +84,36 @@ namespace Player
         public float BulletSpawnDistance
         {
             get { return bulletSpawnDistance; }
-            set { bulletSpawnDistance = value; }
+            set { bulletSpawnDistance = Mathf.Max(0F, value); }
         }
 
         public float BulletSpeed
         {
             get { return bulletSpeed; }
-            set { bulletSpeed = value; }
+            set { bulletSpeed = Mathf.Max(0F, value); }
         }
 
         public float ShootingCooldown
         {
             get { return shootingCooldown; }
-            set { shootingCooldown = value; }
+            set { shootingCooldown = Mathf.Clamp(0F, value, MaxShootingCooldown); }
         }
 
         public float MaxShootingCooldown
         {
             get { return maxShootingCooldown; }
-            set { maxShootingCooldown = value; }
+            set { maxShootingCooldown = Mathf.Max(value); }
+        }
+
+        public List<PlayerItemState> PlayerItemSlots
+        {
+            get { return playerItemSlots; }
+        }
+
+        public int BindingPlayerItemSlot
+        {
+            get { return bindingPlayerItemSlot; }
+            set { bindingPlayerItemSlot = Mathf.Clamp(value, 0, PlayerItemSlots.Count - 1); }
         }
     }
 }

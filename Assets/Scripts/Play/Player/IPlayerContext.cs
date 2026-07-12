@@ -1,3 +1,5 @@
+using Player.Item;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Player
@@ -57,5 +59,17 @@ namespace Player
         /// プレイヤーの射撃後のクールダウンの秒数
         /// </summary>
         float MaxShootingCooldown { get; set; }
+
+        /// <summary>
+        /// <para>プレイヤーのアイテムスロット</para>
+        /// <para>各スロットにはPlayerItemState（アイテムIDと個数のペア）が入る</para>
+        /// </summary>
+        List<PlayerItemState> PlayerItemSlots { get; }
+
+        /// <summary>
+        /// <para>選択中のアイテムスロットの番号</para>
+        /// <para>Shiftを押すと、そのアイテムを使用できる</para>
+        /// </summary>
+        int BindingPlayerItemSlot { get; set; }
     }
 }

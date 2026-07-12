@@ -1,4 +1,5 @@
-using System;
+using Player.Item;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -6,7 +7,7 @@ namespace Player
 {
     /// <summary>
     /// <para>プレイヤーを管理するクラス</para>
-    /// <para>このクラスはシングルトン設計であるため、PlayerManager.INSTANCEからしかインスタンスを取得できない</para>
+    /// <para>このクラスはシングルトン設計であるため、PlayerManager.INSTANCEからインスタンスを取得</para>
     /// <para>SetPlayerメソッドを使ってGameObjectを登録でき、登録されたGameObjectはプレイヤーとして扱われる</para>
     /// <para>登録されたGameObject（プレイヤー）は移動、ダッシュ、射撃などアクションの実行が可能となる</para>
     /// <para>IPlayerContextを実装したMonoBehaviourをGameObjectにアタッチすれば体力や移動速度などを制御できる</para>
@@ -48,7 +49,7 @@ namespace Player
         /// <summary>
         /// プレイヤーの建築入力
         /// </summary>
-        private InputAction buildAction;
+        private InputAction useAction;
 
         /// <summary>
         /// プレイヤーの射撃入力
@@ -66,7 +67,7 @@ namespace Player
         private readonly IPlayerContext defaultContext;
 
         private PlayerManager() {
-            // インスタンスの初期化
+            // DefaultContextの生成
             defaultContext = new DefaultContext();
         }
 
@@ -112,7 +113,7 @@ namespace Player
 
             moveAction = playerActions.FindAction("Move");
             sprintAction = playerActions.FindAction("Sprint");
-            buildAction = playerActions.FindAction("Build");
+            useAction = playerActions.FindAction("Use");
             shootAction = playerActions.FindAction("Shoot");
             cursorAction = playerActions.FindAction("Cursor");
         }
@@ -122,11 +123,11 @@ namespace Player
         /// </summary>
         public void OnUpdate()
         {
-            // playerObjectが存在する場合のみ実行
-            if (playerObject)
+            // playerObject、playerContextが存在する場合のみ実行
+            if (playerObject && playerContext is not null)
             {
                 Move();
-                Build();
+                Use();
                 Shoot();
             }
         }
@@ -154,13 +155,29 @@ namespace Player
         }
 
         /// <summary>
-        /// プレイヤーの建築（未実装）
+        /// アイテムの使用
         /// </summary>
-        private void Build()
+        private void Use()
         {
-            if (buildAction.WasPressedThisFrame())
+            if (!useAction.WasPressedThisFrame())
+                return;
+
+            // プレイヤーのアイテムスロットを取得
+            List<PlayerItemState> playerItemSlots = playerContext.PlayerItemSlots;
+
+            // プレイヤーの選択中のアイテムスロットの番号を取得
+            int slotIndex = playerContext.BindingPlayerItemSlot;
+
+            // スロットの番号が範囲外の場合は何もしない
+            if (slotIndex < 0 && slotIndex >= playerItemSlots.Count)
+                return;
+
+            PlayerItemState playerItemState = playerItemSlots[slotIndex];
+
+            if (playerItemState is not null)
             {
-                Debug.Log("Build");
+                // アイテムの使用
+                playerItemState.Use(playerContext);
             }
         }
 
@@ -270,6 +287,17 @@ namespace Player
             public float MaxShootingCooldown
             {
                 get { return 0F; }
+                set { }
+            }
+
+            public List<PlayerItemState> PlayerItemSlots
+            {
+                get { return new(); }
+            }
+
+            public int BindingPlayerItemSlot
+            {
+                get { return 0; }
                 set { }
             }
         }

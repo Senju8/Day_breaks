@@ -1,4 +1,5 @@
 using Player;
+using Player.Item;
 using UnityEngine;
 
 /// <summary>
@@ -8,6 +9,7 @@ public class DebugPlayer : MonoBehaviour
 {
     void Start()
     {
+        PlayerItemRegistry.INSTANCE.Initialize();
         PlayerManager.INSTANCE.Initialize();
         PlayerManager.INSTANCE.SetPlayer(gameObject);
     }
