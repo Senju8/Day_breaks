@@ -1,109 +1,189 @@
+using Player.Bullet;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerBehaviour : MonoBehaviour, IDamageable
+namespace Player
 {
-    [Header("プレイヤーの体力")]
-    [SerializeField] private int health = 100;
-
-    [Header("プレイヤーの攻撃力")]
-    [SerializeField] private int attackDamage = 50;
-
-    [Header("プレイヤーの速度（通常）")]
-    [SerializeField] private float movementSpeed = 1.0F;
-
-    [Header("プレイヤーの速度（ダッシュ時）")]
-    [SerializeField] private float sprintSpeed = 3.0F;
-
-    [Header("シューター")]
-    [SerializeField] private GameObject shooterObject;
-
-    [Header("弾")]
-    [SerializeField] private GameObject bulletObject;
-
-    [Header("弾の速度")]
-    [SerializeField] private float bulletSpeed = 5.0F;
-
-    [Header("弾の寿命（秒）")]
-    [SerializeField] private float bulletLifespan = 10.0F;
-
-    [Header("弾のスポーン位置までの距離")]
-    [SerializeField] private float bulletSpawnDistance = 1.0F;
-
-    [Header("射撃後のクールダウン")]
-    [SerializeField] private float shootingCooldown = 1.0F;
-
-    [Header("連射モード")]
-    [SerializeField] private bool holdingShootingMode = false;
-
-    private int remainingHealth;
-    private float remainingShootingCooldown;
-
-    private InputAction move;
-    private InputAction sprint;
-    private InputAction use;
-    private InputAction shoot;
-    private InputAction cursor;
-
-    private Rigidbody2D rigidbody2D;
-
-    public void Start()
+    public class PlayerBehaviour : MonoBehaviour, IDamageable
     {
-        // 入力の取得
-        InputActionMap playerActions = this.GetComponent<PlayerInput>().currentActionMap;
+        [Header("プレイヤーの体力")]
+        [SerializeField] private int health = 100;
 
-        this.move = playerActions.FindAction("Move");
-        this.sprint = playerActions.FindAction("Sprint");
-        this.use = playerActions.FindAction("Use");
-        this.shoot = playerActions.FindAction("Shoot");
-        this.cursor = playerActions.FindAction("Cursor");
+        [Header("プレイヤーの攻撃力")]
+        [SerializeField] private int attackDamage = 50;
 
-        // Rigidbody2Dの取得
-        this.rigidbody2D = this.GetComponent<Rigidbody2D>();
+        [Header("プレイヤーの速度（通常）")]
+        [SerializeField] private float movementSpeed = 1.0F;
 
-        // ステータスの初期化
-        this.remainingHealth = this.health;
-        this.remainingShootingCooldown = this.shootingCooldown;
+        [Header("プレイヤーの速度（ダッシュ時）")]
+        [SerializeField] private float sprintSpeed = 3.0F;
+
+        [Header("シューター")]
+        [SerializeField] private GameObject shooterObject;
+
+        [Header("弾")]
+        [SerializeField] private GameObject bulletObject;
+
+        [Header("弾の速度")]
+        [SerializeField] private float bulletSpeed = 5.0F;
+
+        [Header("弾の寿命（秒）")]
+        [SerializeField] private float bulletDuration = 10.0F;
+
+        [Header("弾のスポーン位置までの距離")]
+        [SerializeField] private float bulletSpawnDistance = 1.0F;
+
+        [Header("射撃後のクールダウン")]
+        [SerializeField] private float shootingCooldown = 1.0F;
+
+        [Header("連射モード")]
+        [SerializeField] private bool holdingShootingMode = false;
+
+        private int remainingHealth;
+        private float remainingShootingCooldown;
+
+        private InputAction move;
+        private InputAction sprint;
+        private InputAction use;
+        private InputAction shoot;
+        private InputAction cursor;
+
+        private Rigidbody2D rigidbody2D;
+
+        public void Start()
+        {
+            // 入力の取得
+            InputActionMap playerActions = this.GetComponent<PlayerInput>().currentActionMap;
+
+            this.move = playerActions.FindAction("Move");
+            this.sprint = playerActions.FindAction("Sprint");
+            this.use = playerActions.FindAction("Use");
+            this.shoot = playerActions.FindAction("Shoot");
+            this.cursor = playerActions.FindAction("Cursor");
+
+            // Rigidbody2Dの取得
+            this.rigidbody2D = this.GetComponent<Rigidbody2D>();
+
+            // ステータスの初期化
+            this.remainingHealth = this.health;
+            this.remainingShootingCooldown = this.shootingCooldown;
+        }
+
+        public void Update()
+        {
+            this.Use();
+            this.Shoot();
+        }
+
+        public void FixedUpdate()
+        {
+            this.Move();
+        }
+
+        /// <summary>
+        /// プレイヤーの移動
+        /// </summary>
+        private void Move()
+        {
+            // 入力を確認
+            if (this.move == null || !this.move.IsPressed())
+                return;
+
+            // Rigidbody2Dを確認
+            if (this.rigidbody2D == null)
+                return;
+
+            // 速度の計算
+            Vector2 direction = this.move.ReadValue<Vector2>();
+            float finalSpeed = this.sprint != null && this.sprint.IsPressed() ? this.sprintSpeed : this.movementSpeed;
+
+            // 速度の適用
+            this.rigidbody2D.linearVelocity = direction * finalSpeed;
+        }
+
+        /// <summary>
+        /// アイテムの使用
+        /// </summary>
+        private void Use()
+        {
+        }
+
+        /// <summary>
+        /// プレイヤーの射撃
+        /// </summary>
+        private void Shoot()
+        {
+            // クールダウンを減らす
+            if (this.remainingShootingCooldown > 0.0F)
+            {
+                this.remainingShootingCooldown -= Time.deltaTime;
+                return;
+            }
+
+            // 入力を確認
+            if (this.shoot == null)
+                return;
+
+            if (this.holdingShootingMode)
+            {
+                if (!this.shoot.IsPressed())
+                    return;
+            }
+            else
+            {
+                if (!this.shoot.WasPressedThisFrame())
+                    return;
+            }
+
+            // 弾を確認
+            if (this.bulletObject == null)
+            {
+                Debug.LogWarning("プレイヤーの弾が設定されていません！");
+                return;
+            }
+
+            // シューターを設定
+            GameObject shooterObject = this.shooterObject == null ? this.gameObject : this.shooterObject;
+
+            if (!shooterObject.activeSelf || !shooterObject.activeInHierarchy)
+            {
+                Debug.LogWarning("シューターが非アクティブです！");
+                return;
+            }
+
+            // 弾の位置と速度の計算
+            Vector2 cursorPos = this.cursor.ReadValue<Vector2>();
+            Vector2 shooterPos = shooterObject.transform.position;
+            Vector2 aimPos = Camera.main ? Camera.main.ScreenToWorldPoint(new Vector3(cursorPos.x, cursorPos.y, 0F)) : shooterPos;
+            Vector2 aimDir = Vector2.Normalize(new Vector2(aimPos.x, aimPos.y) - new Vector2(shooterPos.x, shooterPos.y));
+
+            GameObject bulletObject = UnityEngine.Object.Instantiate(this.bulletObject, shooterPos + aimDir * this.bulletSpawnDistance, Quaternion.identity);
+            Rigidbody2D rigidbody2D = bulletObject.GetComponent<Rigidbody2D>();
+            BulletBehaviour bulletBehaviour = bulletObject.GetComponent<BulletBehaviour>();
+
+            if (rigidbody2D != null)
+            {
+                rigidbody2D.linearVelocity = aimDir * this.bulletSpeed;
+            }
+
+            if (bulletBehaviour != null && bulletBehaviour.enabled)
+            {
+                bulletBehaviour.AttackDamage = this.attackDamage;
+                bulletBehaviour.Duration = this.bulletDuration;
+            }
+
+            // クールダウンを設定
+            this.remainingShootingCooldown = this.shootingCooldown;
+        }
+
+        /// <summary>
+        /// IDamageableより実装
+        /// </summary>
+        public void OnDamaged(int damageAmount)
+        {
+            this.remainingHealth = Mathf.Clamp(this.remainingHealth - damageAmount, 0, this.health);
+        }
     }
 
-    public void Update()
-    {
-        this.Move();
-        this.Use();
-        this.Shoot();
-    }
-
-    private void Move()
-    {
-        // 入力を確認
-        if (this.move == null || !this.move.IsPressed())
-            return;
-
-        // Rigidbody2Dを確認
-        if (this.rigidbody2D == null)
-            return;
-
-        // 速度の計算
-        Vector2 direction = this.move.ReadValue<Vector2>();
-        float finalSpeed = this.sprint != null && this.sprint.IsPressed() ? this.sprintSpeed : this.movementSpeed;
-
-        // 速度の適用
-        this.rigidbody2D.linearVelocity = direction * finalSpeed;
-    }
-
-    private void Use()
-    {
-    }
-
-    private void Shoot()
-    {
-    }
-
-    /// <summary>
-    /// IDamageableより実装
-    /// </summary>
-    public void OnDamaged(int damageAmount)
-    {
-        this.remainingHealth = Mathf.Clamp(this.remainingHealth - damageAmount, 0, this.health);
-    }
 }
