@@ -1,128 +1,200 @@
-﻿using Physics;
-using Player.Item;
-using System.Collections.Generic;
+﻿using Player.Bullet;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Player
 {
     /// <summary>
-    /// IPlayerContext、IDamageableを実装
+    /// プレイヤーを定義
     /// </summary>
-    public class PlayerBehaviour : EntityBehaviour, IPlayerContext, IDamageable
+    public class PlayerBehaviour : MonoBehaviour, IDamageable
     {
         [Header("プレイヤーの体力")]
-        [SerializeField] private float health = 0F;
+        [SerializeField] private int health = 100;
 
-        [Header("プレイヤーの最大体力")]
-        [SerializeField] private float maxHealth = 0F;
+        [Header("プレイヤーの攻撃力")]
+        [SerializeField] private int attackDamage = 50;
 
-        [Header("通常移動の速度係数")]
-        [SerializeField] private float movementSpeed = 1F;
+        [Header("プレイヤーの速度（通常）")]
+        [SerializeField] private float movementSpeed = 1.0F;
 
-        [Header("ダッシュ時の速度係数")]
-        [SerializeField] private float sprintSpeed = 1F;
+        [Header("プレイヤーの速度（ダッシュ時）")]
+        [SerializeField] private float sprintSpeed = 3.0F;
+
+        [Header("シューター")]
+        [SerializeField] private GameObject shooterObject;
 
         [Header("プレイヤーの弾")]
-        [SerializeField] private GameObject playerBullet;
+        [SerializeField] private GameObject bulletObject;
 
-        [Header("プレイヤーの弾を射撃するGameObject（シューター）")]
-        [SerializeField] private GameObject playerBulletShooter;
+        [Header("弾の初速度")]
+        [SerializeField] private float bulletVelocity = 5.0F;
 
-        [Header("プレイヤーの弾がスポーンする位置までの距離（シューターの位置を基準とする）")]
-        [SerializeField] private float bulletSpawnDistance = 1F;
+        [Header("弾の寿命（秒）")]
+        [SerializeField] private float bulletLifespan = 10.0F;
 
-        [Header("プレイヤーの弾の速度係数")]
-        [SerializeField] private float bulletSpeed = 1F;
+        [Header("弾のスポーン位置までの距離")]
+        [SerializeField] private float bulletSpawnDistance = 1.0F;
 
-        [Header("プレイヤーの射撃後のクールダウンの残り秒数")]
-        [SerializeField] private float shootingCooldown = 0F;
+        [Header("射撃後のクールダウン（秒）")]
+        [SerializeField] private float shootingCooldown = 0.1F;
 
-        [Header("プレイヤーの射撃後のクールダウンの秒数")]
-        [SerializeField] private float maxShootingCooldown = 0F;
+        [Header("長押し射撃モード")]
+        [SerializeField] private bool holdingShootingMode = false;
 
-        [Header("プレイヤーの所持するアイテムIDのリスト")]
-        [SerializeField] private List<PlayerItemState> playerItemSlots = new();
+        /// <summary>
+        /// プレイヤーの体力（残り）
+        /// </summary>
+        private int remainingHealth;
 
-        [Header("選択中のアイテムスロットの番号")]
-        [SerializeField] private int bindingPlayerItemSlot = 0;
+        /// <summary>
+        /// 射撃後のクールダウン（残り）
+        /// </summary>
+        private float remainingShootingCooldown;
 
-        public new void Start()
+        private InputAction move;
+        private InputAction sprint;
+        private InputAction use;
+        private InputAction shoot;
+        private InputAction cursor;
+
+        private new Rigidbody2D rigidbody2D;
+
+        public void Start()
         {
-            // 摩擦係数の初期化
-            this.Entity.Friction = 0.95F;
+            // PlayerInputの取得
+            InputActionMap playerActions = this.GetComponent<PlayerInput>()?.currentActionMap;
 
-            base.Start();
+            if (playerActions != null)
+            {
+                this.move = playerActions.FindAction("Move");
+                this.sprint = playerActions.FindAction("Sprint");
+                this.use = playerActions.FindAction("Use");
+                this.shoot = playerActions.FindAction("Shoot");
+                this.cursor = playerActions.FindAction("Cursor");
+            }
+
+            // Rigidbody2Dの取得
+            this.rigidbody2D = GetComponent<Rigidbody2D>();
+
+            // ステータスの初期化
+            this.remainingHealth = this.health;
+            this.remainingShootingCooldown = 0.0F;
         }
 
-        public float Health
+        public void Update()
         {
-            get { return this.health; }
-            set { this.health = Mathf.Clamp(value, 0F, this.MaxHealth); }
+            this.Shoot();
+            this.Use();
         }
 
-        public float MaxHealth
+        public void FixedUpdate()
         {
-            get { return this.maxHealth; }
-            set { this.maxHealth = Mathf.Max(0F, value); }
+            this.Move();
         }
 
-        public float MovementSpeed
+        public void OnCollisionEnter2D(Collision2D collision2D)
         {
-            get { return this.movementSpeed; }
-            set { this.movementSpeed = Mathf.Max(0F, value); }
+            switch (collision2D.gameObject.tag)
+            {
+            }
         }
 
-        public float SprintSpeed
+        /// <summary>
+        /// プレイヤーの移動
+        /// </summary>
+        private void Move()
         {
-            get { return this.sprintSpeed; }
-            set { this.sprintSpeed = Mathf.Max(0F, value); }
+            // 入力を確認
+            if (this.move == null || !this.move.IsPressed())
+                return;
+
+            // Rigidbody2Dが設定されているか確認
+            if (this.rigidbody2D == null)
+                return;
+
+            // 速度を計算
+            Vector2 direction = this.move.ReadValue<Vector2>();
+            float finalSpeed = this.sprint != null && this.sprint.IsPressed() ? this.sprintSpeed : this.movementSpeed;
+
+            // 速度を適用
+            this.rigidbody2D.linearVelocity = finalSpeed * direction;
         }
 
-        public GameObject PlayerBullet
+        /// <summary>
+        /// プレイヤーの射撃
+        /// </summary>
+        private void Shoot()
         {
-            get { return this.playerBullet; }
-            set { this.playerBullet = value; }
+            // クールダウンを減らす
+            if (this.remainingShootingCooldown > 0.0F)
+            {
+                this.remainingShootingCooldown -= Time.deltaTime;
+                return;
+            }
+
+            // 入力を確認
+            if (this.cursor == null || this.shoot == null)
+                return;
+
+            if (this.holdingShootingMode)
+            {
+                if (!this.shoot.IsPressed())
+                    return;
+            }
+            else
+            {
+                if (!this.shoot.WasPressedThisFrame())
+                    return;
+            }
+
+            // 弾が設定されているか確認
+            if (this.bulletObject == null)
+            {
+                Debug.LogWarning("プレイヤーの弾が設定されていません！");
+                return;
+            }
+
+            // シューターを設定
+            GameObject shooterObject = this.shooterObject == null ? this.gameObject : this.shooterObject;
+
+            if (!shooterObject.activeInHierarchy)
+            {
+                Debug.LogWarning("シューターが非アクティブになっています！");
+                return;
+            }
+
+            // 弾の位置と速度を計算
+            Vector2 cursorPos = this.cursor.ReadValue<Vector2>();
+            Vector2 shooterPos = shooterObject.transform.position;
+            Vector2 aimPos = Camera.main ? Camera.main.ScreenToWorldPoint(new Vector3(cursorPos.x, cursorPos.y, 0.0F)) : shooterPos;
+            Vector2 aimDir = Vector2.Normalize(new Vector2(aimPos.x, aimPos.y) - new Vector2(shooterPos.x, shooterPos.y));
+
+            // 弾を射撃
+            GameObject bulletObject = UnityEngine.Object.Instantiate(this.bulletObject, shooterPos + aimDir * this.bulletSpawnDistance, Quaternion.identity);
+            Rigidbody2D rigidbody2D = bulletObject.GetComponent<Rigidbody2D>();
+            BulletBehaviour bulletBehaviour = bulletObject.GetComponent<BulletBehaviour>();
+
+            if (rigidbody2D != null)
+            {
+                rigidbody2D.linearVelocity = aimDir * this.bulletVelocity;
+            }
+
+            if (bulletBehaviour != null && bulletBehaviour.enabled)
+            {
+                bulletBehaviour.AttackDamage = this.attackDamage;
+                bulletBehaviour.Lifespan = this.bulletLifespan;
+            }
+
+            // クールダウンを設定
+            this.remainingShootingCooldown = this.shootingCooldown;
         }
 
-        public GameObject PlayerBulletShooter
+        /// <summary>
+        /// アイテムを使用
+        /// </summary>
+        private void Use()
         {
-            get { return this.playerBulletShooter; }
-            set { this.playerBulletShooter = value; }
-        }
-
-        public float BulletSpawnDistance
-        {
-            get { return this.bulletSpawnDistance; }
-            set { this.bulletSpawnDistance = Mathf.Max(0F, value); }
-        }
-
-        public float BulletSpeed
-        {
-            get { return this.bulletSpeed; }
-            set { this.bulletSpeed = Mathf.Max(0F, value); }
-        }
-
-        public float ShootingCooldown
-        {
-            get { return this.shootingCooldown; }
-            set { this.shootingCooldown = Mathf.Clamp(0F, value, this.MaxShootingCooldown); }
-        }
-
-        public float MaxShootingCooldown
-        {
-            get { return this.maxShootingCooldown; }
-            set { this.maxShootingCooldown = Mathf.Max(value); }
-        }
-
-        public List<PlayerItemState> PlayerItemSlots
-        {
-            get { return this.playerItemSlots; }
-        }
-
-        public int BindingPlayerItemSlot
-        {
-            get { return this.bindingPlayerItemSlot; }
-            set { this.bindingPlayerItemSlot = Mathf.Clamp(value, 0, this.PlayerItemSlots.Count - 1); }
         }
 
         /// <summary>
@@ -130,15 +202,7 @@ namespace Player
         /// </summary>
         public void OnDamaged(int damageAmount)
         {
-            this.Health -= damageAmount;
-        }
-
-        /// <summary>
-        /// IDamageableより実装
-        /// </summary>
-        public new UnityEngine.Transform transform
-        {
-            get { return base.transform; }
+            this.remainingHealth = Mathf.Clamp(this.remainingHealth - damageAmount, 0, this.health);
         }
     }
 }
