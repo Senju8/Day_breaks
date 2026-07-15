@@ -7,7 +7,11 @@ namespace Player
     /// <summary>
     /// プレイヤーを定義
     /// </summary>
+<<<<<<< HEAD:Assets/Scripts/Play/Player/PlayerBehaviour.cs
     public class PlayerBehaviour : MonoBehaviour, IDamageable
+=======
+    public class MonoPlayerContext : EntityBehaviour, IPlayerContext, IDamageable
+>>>>>>> 9fc97fcc9219d38730f5a38331febed6868bcff7:Assets/Scripts/Play/Player/MonoPlayerContext.cs
     {
         [Header("プレイヤーの体力")]
         [SerializeField] private int health = 100;
