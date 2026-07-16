@@ -91,11 +91,14 @@ namespace Player.Item
             {
                 IPlayerItem playerItem = this.playerItems[playerItemState.Id]?.playerItem;
 
-                if (playerItem != null && playerItemState.Count >= playerItem.Cost)
+                // アイテムを使用できるか確認
+                if (playerItem != null && playerItemState.Count >= playerItem.Cost && playerItem.CanUse(playerItemState, playerObject))
                 {
+                    // アイテム数を減らす
                     playerItemState.Count -= playerItem.Cost;
 
-                    playerItem.Use(playerItemState, playerObject);
+                    // アイテムを使用
+                    playerItem.DoUse(playerItemState, playerObject);
 
                     return true;
                 }
