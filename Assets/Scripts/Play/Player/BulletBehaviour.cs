@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace Player.Bullet
 {
+    /// <summary>
+    /// プレイヤーの弾
+    /// </summary>
     public class BulletBehaviour : MonoBehaviour
     {
         [Header("弾の攻撃力")]
@@ -54,10 +57,10 @@ namespace Player.Bullet
             }
         }
 
-        public void OnCollisionEnter2D(Collision2D collision2D)
+        public void OnTriggerEnter2D(Collider2D collider2D)
         {
-            this.Attack(collision2D.gameObject);
-            this.Collide(collision2D.gameObject);
+            this.Attack(collider2D.gameObject);
+            this.Collide(collider2D.gameObject);
         }
 
         /// <summary>

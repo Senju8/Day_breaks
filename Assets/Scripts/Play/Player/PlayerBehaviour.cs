@@ -8,6 +8,9 @@ using UnityEngine.InputSystem;
 
 namespace Player
 {
+    /// <summary>
+    /// プレイヤー
+    /// </summary>
     public class PlayerBehaviour : MonoBehaviour, IDamageable
     {
         [Header("カメラ追従モード")]

@@ -24,14 +24,14 @@ namespace Player.Item
         /// <summary>
         /// 新しいアイテムを登録する
         /// </summary>
-        public bool Register(IPlayerItem playerItem, GameObject gameObject = null)
+        public bool Register(IPlayerItem playerItem)
         {
             if (playerItem == null)
                 return false;
 
             try
             {
-                this.playerItems.Add(playerItem.Id, new PlayerItemHolder(playerItem, gameObject));
+                this.playerItems.Add(playerItem.Id, new PlayerItemHolder(playerItem));
 
                 return true;
             }
@@ -49,37 +49,6 @@ namespace Player.Item
         public bool Delete(string id)
         { 
             return this.playerItems.Remove(id);
-        }
-
-        /// <summary>
-        /// アイテムにGameObjectを紐づける
-        /// </summary>
-        public bool SetGameObject(string id, GameObject gameObject)
-        {
-            if (this.playerItems.ContainsKey(id))
-            {
-                PlayerItemHolder holder = this.playerItems[id];
-
-                if (holder != null)
-                {
-                    holder.gameObject = gameObject;
-
-                    return true;
-                }
-            }
-
-            Debug.LogWarning($"アイテム（ID: {id}）は登録されていません！");
-
-            return false;
-        }
-
-        /// <summary>
-        /// <para>アイテムに紐づけられたGameObjectを取得する</para>
-        /// <para>存在しない場合はnull</para>
-        /// </summary>
-        public GameObject GetGameObject(string id)
-        {
-            return this.playerItems.ContainsKey(id) ? this.playerItems[id].gameObject : null;
         }
 
         /// <summary>
@@ -114,7 +83,7 @@ namespace Player.Item
         }
 
         /// <summary>
-        /// アイテムとその他オブジェクトを紐づける
+        /// アイテムホルダー
         /// </summary>
         private class PlayerItemHolder
         {
@@ -123,15 +92,9 @@ namespace Player.Item
             /// </summary>
             public IPlayerItem playerItem;
 
-            /// <summary>
-            /// アイテムのGameObject
-            /// </summary>
-            public GameObject gameObject;
-
-            public PlayerItemHolder(IPlayerItem playerItem, GameObject gameObject)  
+            public PlayerItemHolder(IPlayerItem playerItem)  
             {
                 this.playerItem = playerItem;
-                this.gameObject = gameObject;
             }
         }
     }
