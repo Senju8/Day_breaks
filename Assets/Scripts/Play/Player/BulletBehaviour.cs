@@ -60,7 +60,6 @@ namespace Player.Bullet
         public void OnTriggerEnter2D(Collider2D collider2D)
         {
             this.Attack(collider2D.gameObject);
-            this.Collide(collider2D.gameObject);
         }
 
         /// <summary>
@@ -80,20 +79,11 @@ namespace Player.Bullet
                 {
                     // EnemyMovementにダメージを与える
                     enemyMovement.OnDamagedByPlayer(this.attackDamage);
+
+                    // 弾を消す
+                    UnityEngine.Object.Destroy(this.gameObject);
                 }
             }
-        }
-
-        /// <summary>
-        /// 弾を消す
-        /// </summary>
-        private void Collide(GameObject gameObject)
-        {
-            // これらはスルー
-            if (gameObject.CompareTag("Player") || gameObject.CompareTag("Bullet"))
-                return;
-
-            UnityEngine.Object.Destroy(this.gameObject);
         }
     }
 }

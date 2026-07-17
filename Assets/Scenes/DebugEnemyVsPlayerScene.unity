@@ -1120,6 +1120,30 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6390551689946605179, guid: 4244c79e42ae99d4ebad462679b5ba49, type: 3}
+      propertyPath: usingCooldown
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6390551689946605179, guid: 4244c79e42ae99d4ebad462679b5ba49, type: 3}
+      propertyPath: playerItemSlots.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6390551689946605179, guid: 4244c79e42ae99d4ebad462679b5ba49, type: 3}
+      propertyPath: playerItemSlots.Array.data[0].id
+      value: decoy_fortress_regenerator
+      objectReference: {fileID: 0}
+    - target: {fileID: 6390551689946605179, guid: 4244c79e42ae99d4ebad462679b5ba49, type: 3}
+      propertyPath: playerItemSlots.Array.data[1].id
+      value: EMPTY
+      objectReference: {fileID: 0}
+    - target: {fileID: 6390551689946605179, guid: 4244c79e42ae99d4ebad462679b5ba49, type: 3}
+      propertyPath: playerItemSlots.Array.data[0].count
+      value: 300
+      objectReference: {fileID: 0}
+    - target: {fileID: 6390551689946605179, guid: 4244c79e42ae99d4ebad462679b5ba49, type: 3}
+      propertyPath: playerItemSlots.Array.data[1].count
+      value: 300
+      objectReference: {fileID: 0}
     - target: {fileID: 9002160305156552501, guid: 4244c79e42ae99d4ebad462679b5ba49, type: 3}
       propertyPath: m_Name
       value: Player

@@ -1,6 +1,8 @@
-﻿using Player.Bullet;
+﻿using Castle;
+using DecoyFortress;
+using Enemy;
+using Player.Bullet;
 using Player.Item;
-using System;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -52,117 +54,141 @@ namespace Player
         [Header("プレイヤーのアイテムスロット")]
         [SerializeField] private PlayerItemState[] playerItemSlots = new PlayerItemState[0];
 
-        [Header("プレイヤーのアイテムスロットのサイズ")]
-        [SerializeField] private int playerItemSlotSize = 3;
-
         [Header("アイテム使用後のクールダウン（秒）")]
         [SerializeField] private float usingCooldown = 1.0F;
 
         private int remainingHealth;
         private float remainingUsingCooldown;
         private float remainingShootingCooldown;
+        private float selectingSlotPos;
 
         private InputAction move;
         private InputAction sprint;
         private InputAction use;
         private InputAction shoot;
         private InputAction cursor;
+        private InputAction scroll;
 
         private new Rigidbody2D rigidbody2D;
 
+        private readonly Dictionary<string, DecoyFortressSetting> triggeringDecoyFortress = new();
+
         /// <summary>
-        /// <para>アイテムスロットに空きがあれば、アイテムを追加する</para>
-        /// <para>同じアイテムを持っていれば、countだけ個数を増やす</para>
-        /// <para>アイテムを追加できた場合はtrueを返す</para>
+        /// プレイヤーが接触しているDecoyFortress
         /// </summary>
-        public bool AddItem(string id, int count = 1)
+        public Dictionary<string, DecoyFortressSetting>.ValueCollection TriggeringDecoyFortress
         {
-            this.Resize();
-
-            if (id == null)
-                return false;
-
-            PlayerItemState playerItemState = new(id, count);
-            PlayerItemState slotItemState;
-
-            int length = this.playerItemSlots.Length;
-
-            // 同じアイテムを探す
-            for (int i = 0; i < length; ++i)
-            {
-                slotItemState = this.playerItemSlots[i];
-
-                if (slotItemState.Equals(playerItemState))
-                {
-                    slotItemState.Count += count;
-
-                    // アイテムの個数が0になった場合は空にする
-                    if (slotItemState.Count <= 0)
-                    {
-                        this.playerItemSlots[i] = PlayerItemState.EMPTY;
-                    }
-
-                    return true;
-                }
-            }
-
-            // 空のアイテムスロットを探す
-            for (int i = 0; i < length; ++i)
-            {
-                slotItemState = this.playerItemSlots[i];
-
-                if (slotItemState.Equals(PlayerItemState.EMPTY))
-                {
-                    this.playerItemSlots[i] = playerItemState;
-
-                    return true;
-                }
-
-            }
-
-            return false;
+            get { return this.triggeringDecoyFortress.Values; }
         }
 
         /// <summary>
-        /// アイテムスロットのリサイズ
+        /// プレイヤーのアイテムスロット（シャローコピー）
         /// </summary>
-        private void Resize()
+        public PlayerItemState[] PlayerItemSlots
         {
-            if (this.playerItemSlots.Length != this.playerItemSlotSize)
-            {
-                // 新しいサイズのアイテムスロットを生成
-                PlayerItemState[] newPlayerItemSlots = new PlayerItemState[Math.Max(0, this.playerItemSlotSize)];
-                int oldLength = this.playerItemSlots.Length;
-                int newLength = newPlayerItemSlots.Length;
+            get { return (PlayerItemState[])this.playerItemSlots.Clone(); }
+        }
 
-                // 要素をコピー
-                for (int i = 0; i < newLength; ++i)
+        /// <summary>
+        /// <para>同じアイテムを持っていれば、countだけ個数を増やす</para>
+        /// <para>アイテムスロットに空きがあれば、アイテムを追加する</para>
+        /// <para>アイテムを追加できた場合はそのスロット番号を返す</para>
+        /// <para>できなかった場合は-1を返す</para>
+        /// </summary>
+        public int AddItem(string id, int count = 1)
+        {
+            PlayerItemState playerItemState;
+            int empty = -1;
+
+            for (int i = this.playerItemSlots.Length - 1; i >= 0; --i)
+            {
+                playerItemState = this.playerItemSlots[i];
+
+                if (playerItemState == null || playerItemState.Id == PlayerItemState.EMPTY.Id)
                 {
-                    if (i < oldLength)
-                    {
-                        newPlayerItemSlots[i] = this.playerItemSlots[i];
-                    }
-                    else
-                    {
-                        newPlayerItemSlots[i] = PlayerItemState.EMPTY;
-                    }
+                    // 空のスロット番号を記憶
+                    empty = i;
                 }
-
-                this.playerItemSlots = newPlayerItemSlots;
-            }
-            else
-            {
-                int length = this.playerItemSlots.Length;
-
-                // nullをPlayerItemState.EMPTYに置き換える
-                for (int i = 0; i < length; ++i)
+                else if (playerItemState.Id == id)
                 {
-                    if (this.playerItemSlots[i] == null)
-                    {
-                        this.playerItemSlots[i] = PlayerItemState.EMPTY;
-                    }
+                    // アイテムをcount個増やす
+                    playerItemState.Count += count;
+
+                    return i;
                 }
             }
+
+            // 空のスロットにアイテムを追加
+            if (empty > 0)
+            {
+                this.playerItemSlots[empty] = new PlayerItemState(id, count);
+
+                return empty;
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// <para>指定したIDからスロット内のアイテムを取得する</para>
+        /// <para>存在しない場合はPlayerItemState.EMPTYを返す</para>
+        /// </summary>
+        public PlayerItemState GetItem(string id)
+        {
+            int length = this.playerItemSlots.Length;
+
+            PlayerItemState playerItemState;
+
+            for (int i = 0; i < length; ++i)
+            {
+                playerItemState = this.PlayerItemSlots[i];
+
+                if (playerItemState != null && playerItemState.Id == id)
+                {
+                    return playerItemState;
+                }
+            }
+
+            return PlayerItemState.EMPTY;
+        }
+
+
+        /// <summary>
+        /// <para>指定したスロット番号にあるアイテムを取得する</para>
+        /// <para>存在しない場合はPlayerItemState.EMPTYを返す</para>
+        /// </summary>
+        public PlayerItemState GetItem(int slot)
+        {
+            if (this.playerItemSlots.Length > 0)
+            {
+                int index = slot % this.playerItemSlots.Length;
+
+                if (index < 0)
+                {
+                    index += this.playerItemSlots.Length;
+                }
+
+                return this.PlayerItemSlots[index] ?? PlayerItemState.EMPTY;
+            }
+
+            return PlayerItemState.EMPTY;
+        }
+
+        /// <summary>
+        /// プレイヤーが選択しているスロット番号を取得する
+        /// </summary>
+        /// <returns></returns>
+        public int GetSelectingSlot()
+        {
+            return Mathf.FloorToInt(this.selectingSlotPos * this.playerItemSlots.Length);
+        }
+
+        /// <summary>
+        /// IDamageableより実装
+        /// </summary>
+        public void OnDamaged(int damageAmount)
+        {
+            this.remainingHealth = Mathf.Clamp(this.remainingHealth - damageAmount, 0, this.health);
         }
 
         public void Start()
@@ -175,6 +201,7 @@ namespace Player
             this.use = playerActions.FindAction("Use");
             this.shoot = playerActions.FindAction("Shoot");
             this.cursor = playerActions.FindAction("Cursor");
+            this.scroll = playerActions.FindAction("Scroll");
 
             // Rigidbody2Dの取得
             this.rigidbody2D = this.GetComponent<Rigidbody2D>();
@@ -186,6 +213,7 @@ namespace Player
 
         public void Update()
         {
+            this.Select();
             this.Use();
             this.Shoot();
         }
@@ -194,6 +222,32 @@ namespace Player
         {
             this.Move();
             this.Follow();
+        }
+
+        public void OnTriggerEnter2D(Collider2D collider2d)
+        {
+            DecoyFortressSetting decoyFortressSetting = PlayerBehaviour.GetDecoyFortress(collider2d.gameObject);
+
+            if (decoyFortressSetting != null)
+            {
+                // DecoyFortressを追加
+                this.triggeringDecoyFortress[decoyFortressSetting.GetInstanceID().ToString()] = decoyFortressSetting;
+
+                Debug.Log($"DecoyFortressがPlayerBehaviourに接触しました！（ID: {decoyFortressSetting.GetInstanceID()}）");
+            }
+        }
+
+        public void OnTriggerExit2D(Collider2D collider2d)
+        {
+            DecoyFortressSetting decoyFortressSetting = PlayerBehaviour.GetDecoyFortress(collider2d.gameObject);
+
+            if (decoyFortressSetting != null)
+            {
+                // DecoyFortressを削除
+                this.triggeringDecoyFortress.Remove(decoyFortressSetting.GetInstanceID().ToString());
+
+                Debug.Log($"DecoyFortresがPlayerBehaviourを通過しました！（ID: {decoyFortressSetting.GetInstanceID()}）");
+            }
         }
 
         /// <summary>
@@ -229,6 +283,34 @@ namespace Player
         }
 
         /// <summary>
+        /// アイテムの選択
+        /// </summary>
+        private void Select()
+        {
+            // 入力を確認
+            if (this.scroll == null)
+                return;
+
+            Vector2 scrollVelocity = this.scroll.ReadValue<Vector2>();
+
+            // スクロール量を確認
+            if (scrollVelocity.sqrMagnitude <= 0.0F)
+                return;
+
+            // 選択中のアイテムスロットの位置を更新
+            this.selectingSlotPos += this.playerItemSlots.Length == 0 ? 0.0F : scrollVelocity.normalized.y / this.playerItemSlots.Length;
+            this.selectingSlotPos %= 1.0F;
+
+            if (this.selectingSlotPos < 0.0F)
+            {
+                this.selectingSlotPos += 1.0F;
+            }
+
+            // 誤差を補正
+            this.selectingSlotPos = Mathf.Clamp(this.selectingSlotPos, 0.0F, 1.0F);
+        }
+
+        /// <summary>
         /// アイテムの使用
         /// </summary>
         private void Use()
@@ -244,7 +326,16 @@ namespace Player
             if (this.use == null || !this.use.WasPressedThisFrame())
                 return;
 
+            PlayerItemState playerItemState = this.GetItem(this.GetSelectingSlot());
 
+            if (playerItemState.Use(this))
+            {
+                Debug.Log($"プレイヤーがアイテム（ID: {playerItemState.Id}の使用に成功しました！）");
+            }
+            else
+            {
+                Debug.Log($"プレイヤーがアイテム（ID: {playerItemState.Id}の使用に失敗しました…");
+            }
 
             // クールダウンを設定
             this.remainingUsingCooldown = this.usingCooldown;
@@ -317,11 +408,75 @@ namespace Player
         }
 
         /// <summary>
-        /// IDamageableより実装
+        /// <para>GameObjectからEnemyMovementを取得する</para>
+        /// <para>できなかった場合はnull</para>
         /// </summary>
-        public void OnDamaged(int damageAmount)
+        public static EnemyMovement GetEnemy(GameObject gameObject)
         {
-            this.remainingHealth = Mathf.Clamp(this.remainingHealth - damageAmount, 0, this.health);
+            if (gameObject == null)
+                return null;
+
+            HitboxMarker hitBoxMarker = gameObject.GetComponent<HitboxMarker>();
+
+            if (hitBoxMarker != null && hitBoxMarker.enabled)
+            {
+                EnemyMovement enemyMovement = hitBoxMarker.GetComponentInParent<EnemyMovement>();
+
+                if (enemyMovement != null && enemyMovement.enabled)
+                {
+                    return enemyMovement;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// <para>GameObjectからDecoyFortressSettingを取得する</para>
+        /// <para>できなかった場合はnull</para>
+        /// </summary>
+        public static DecoyFortressSetting GetDecoyFortress(GameObject gameObject)
+        {
+            if (gameObject == null)
+                return null;
+
+            HitboxMarker hitBoxMarker = gameObject.GetComponent<HitboxMarker>();
+
+            if (hitBoxMarker != null && hitBoxMarker.enabled)
+            {
+                DecoyFortressSetting decoyFortressSetting = hitBoxMarker.GetComponentInParent<DecoyFortressSetting>();
+
+                if (decoyFortressSetting != null && decoyFortressSetting.enabled)
+                {
+                    return decoyFortressSetting;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// <para>GameObjectからCastleManagerを取得する</para>
+        /// <para>できなかった場合はnull</para>
+        /// </summary>
+        public static CastleManager GetCastle(GameObject gameObject)
+        {
+            if (gameObject == null)
+                return null;
+
+            HitboxMarker hitBoxMarker = gameObject.GetComponent<HitboxMarker>();
+
+            if (hitBoxMarker != null && hitBoxMarker.enabled)
+            {
+                CastleManager castleManager = hitBoxMarker.GetComponentInParent<CastleManager>();
+
+                if (castleManager != null && castleManager.enabled)
+                {
+                    return castleManager;
+                }
+            }
+
+            return null;
         }
     }
 }
