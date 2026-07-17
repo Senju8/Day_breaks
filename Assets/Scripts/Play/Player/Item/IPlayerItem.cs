@@ -31,7 +31,7 @@ namespace Player.Item
         /// <summary>
         /// アイテムを使用できるかどうか
         /// </summary>
-        bool CanUse(PlayerItemState playerItemState, GameObject playerObject)
+        bool CanUse(PlayerItemState playerItemState, PlayerBehaviour playerBehaviour)
         {
             return true;
         }
@@ -39,6 +39,6 @@ namespace Player.Item
         /// <summary>
         /// アイテムを使用したときのアクション
         /// </summary>
-        void DoUse(PlayerItemState playerItemState, GameObject playerObject);
+        bool DoUse(PlayerItemState playerItemState, PlayerBehaviour playerBehaviour);
     }
 }

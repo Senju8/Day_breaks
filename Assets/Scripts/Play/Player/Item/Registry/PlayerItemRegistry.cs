@@ -19,7 +19,11 @@ namespace Player.Item
         /// </summary>
         private readonly Dictionary<string, PlayerItemHolder> playerItems = new();
 
-        private PlayerItemRegistry() { }
+        private PlayerItemRegistry()
+        {
+            // アイテムを登録する
+            this.Register(new DecoyFortressRegenerator());
+        }
 
         /// <summary>
         /// 新しいアイテムを登録する
@@ -54,20 +58,17 @@ namespace Player.Item
         /// <summary>
         /// 登録されたアイテムを使用する
         /// </summary>
-        public bool Use(PlayerItemState playerItemState, GameObject playerObject)
+        public bool Use(PlayerItemState playerItemState, PlayerBehaviour playerBehaviour)
         {
             if (this.playerItems.ContainsKey(playerItemState.Id))
             {
                 IPlayerItem playerItem = this.playerItems[playerItemState.Id]?.playerItem;
 
-                // アイテムを使用できるか確認
-                if (playerItem != null && playerItemState.Count >= playerItem.Cost && playerItem.CanUse(playerItemState, playerObject))
+                // アイテムを使用できるか確認→使用
+                if (playerItem != null && playerItemState.Count >= playerItem.Cost && playerItem.CanUse(playerItemState, playerBehaviour) && playerItem.DoUse(playerItemState, playerBehaviour))
                 {
                     // アイテム数を減らす
                     playerItemState.Count -= playerItem.Cost;
-
-                    // アイテムを使用
-                    playerItem.DoUse(playerItemState, playerObject);
 
                     return true;
                 }
