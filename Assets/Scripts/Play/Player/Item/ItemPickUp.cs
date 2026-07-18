@@ -48,7 +48,7 @@ namespace Player.Item
         /// </summary>
         private bool AddToInventory(Player.PlayerBehaviour playerBehaviour)
         {
-            bool added = playerBehaviour.AddItem(itemId,amount);
+            bool added = playerBehaviour.AddItem(itemId,amount) != -1;
 
             if(added)
             {

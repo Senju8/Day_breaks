@@ -23,7 +23,7 @@ namespace Player.Item
         public string Id
         {
             get { return this.id; }
-            set { this.id = value ?? "unknown"; }
+            set { this.id = value ?? ""; }
         }
 
         public int Count
@@ -32,7 +32,7 @@ namespace Player.Item
             set { this.count = Mathf.Max(0, value); }
         }
 
-        public PlayerItemState(string id = "unknown", int count = 1)
+        public PlayerItemState(string id = "", int count = 1)
         {
             this.Id = id;
             this.Count = count;
@@ -56,7 +56,7 @@ namespace Player.Item
         }
 
         /// <summary>
-        /// IDのハッシュ値と同じ値を返す
+        /// IDと同じハッシュ値を返す
         /// </summary>
         public override int GetHashCode()
         {
@@ -66,14 +66,14 @@ namespace Player.Item
         /// <summary>
         /// アイテムを使用する
         /// </summary>
-        public bool Use(GameObject playerObject)
+        public bool Use(PlayerBehaviour playerBehaviour)
         {
-            return PlayerItemRegistry.INSTANCE.Use(this, playerObject);
+            return PlayerItemRegistry.INSTANCE.Use(this, playerBehaviour);
         }
 
         private class EmptyItemState : PlayerItemState
         {
-            public EmptyItemState() : base("empty", 0) { }
+            public EmptyItemState() : base("", 0) { }
 
             public new string Id
             {
@@ -87,8 +87,10 @@ namespace Player.Item
                 set { }
             }
 
-            public new bool Use(GameObject playerObject)
+            public new bool Use(PlayerBehaviour playerBehaviour)
             {
+                Debug.Log("プレイヤーが空のPlayerItemStateを使用しました…");
+
                 return false;
             }
         }

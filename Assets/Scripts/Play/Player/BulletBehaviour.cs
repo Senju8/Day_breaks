@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace Player.Bullet
 {
+    /// <summary>
+    /// プレイヤーの弾
+    /// </summary>
     public class BulletBehaviour : MonoBehaviour
     {
         [Header("弾の攻撃力")]
@@ -54,10 +57,9 @@ namespace Player.Bullet
             }
         }
 
-        public void OnCollisionEnter2D(Collision2D collision2D)
+        public void OnTriggerEnter2D(Collider2D collider2D)
         {
-            this.Attack(collision2D.gameObject);
-            this.Collide(collision2D.gameObject);
+            this.Attack(collider2D.gameObject);
         }
 
         /// <summary>
@@ -77,20 +79,11 @@ namespace Player.Bullet
                 {
                     // EnemyMovementにダメージを与える
                     enemyMovement.OnDamagedByPlayer(this.attackDamage);
+
+                    // 弾を消す
+                    UnityEngine.Object.Destroy(this.gameObject);
                 }
             }
-        }
-
-        /// <summary>
-        /// 弾を消す
-        /// </summary>
-        private void Collide(GameObject gameObject)
-        {
-            // これらはスルー
-            if (gameObject.CompareTag("Player") || gameObject.CompareTag("Bullet"))
-                return;
-
-            UnityEngine.Object.Destroy(this.gameObject);
         }
     }
 }

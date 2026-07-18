@@ -200,7 +200,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e16bbbe843190f049be1322d43beb82d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player.PlayerBehaviour
-  cameraFollowingMode: 1
+  cameraFollowingMode: 0
   health: 100
   attackDamage: 50
   movementSpeed: 1
@@ -213,5 +213,4 @@ MonoBehaviour:
   shootingCooldown: 0.1
   holdingShootingMode: 1
   playerItemSlots: []
-  playerItemSlotSize: 5
   usingCooldown: 1

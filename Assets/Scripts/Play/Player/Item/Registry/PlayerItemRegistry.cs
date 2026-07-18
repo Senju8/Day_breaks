@@ -19,19 +19,29 @@ namespace Player.Item
         /// </summary>
         private readonly Dictionary<string, PlayerItemHolder> playerItems = new();
 
-        private PlayerItemRegistry() { }
+        private PlayerItemRegistry()
+        {
+            this.Initialize();
+        }
 
         /// <summary>
         /// 新しいアイテムを登録する
         /// </summary>
-        public bool Register(IPlayerItem playerItem, GameObject gameObject = null)
+        public bool Register(IPlayerItem playerItem)
         {
             if (playerItem == null)
                 return false;
 
+            if (playerItem.Id == null || playerItem.Id == "")
+            {
+                Debug.Log($"IDがnullもしくは空文字であるため、アイテムを登録できません…");
+
+                return false;
+            }
+
             try
             {
-                this.playerItems.Add(playerItem.Id, new PlayerItemHolder(playerItem, gameObject));
+                this.playerItems.Add(playerItem.Id, new PlayerItemHolder(playerItem));
 
                 return true;
             }
@@ -52,58 +62,36 @@ namespace Player.Item
         }
 
         /// <summary>
-        /// アイテムにGameObjectを紐づける
-        /// </summary>
-        public bool SetGameObject(string id, GameObject gameObject)
-        {
-            if (this.playerItems.ContainsKey(id))
-            {
-                PlayerItemHolder holder = this.playerItems[id];
-
-                if (holder != null)
-                {
-                    holder.gameObject = gameObject;
-
-                    return true;
-                }
-            }
-
-            Debug.LogWarning($"アイテム（ID: {id}）は登録されていません！");
-
-            return false;
-        }
-
-        /// <summary>
-        /// <para>アイテムに紐づけられたGameObjectを取得する</para>
-        /// <para>存在しない場合はnull</para>
-        /// </summary>
-        public GameObject GetGameObject(string id)
-        {
-            return this.playerItems.ContainsKey(id) ? this.playerItems[id].gameObject : null;
-        }
-
-        /// <summary>
         /// 登録されたアイテムを使用する
         /// </summary>
-        public bool Use(PlayerItemState playerItemState, GameObject playerObject)
+        public bool Use(PlayerItemState playerItemState, PlayerBehaviour playerBehaviour)
         {
+            if (playerItemState == null || playerItemState.Id == PlayerItemState.EMPTY.Id)
+            {
+                Debug.LogWarning($"PlayerItemStateは空であるため使用できません…");
+
+                return false;
+            }
+
+            if (playerBehaviour == null)
+            {
+                Debug.LogError($"PlayerBehaviourがnullであるためアイテム（ID: {playerItemState.Id}）を使用できません…");
+
+                return false;
+            }
+
             if (this.playerItems.ContainsKey(playerItemState.Id))
             {
                 IPlayerItem playerItem = this.playerItems[playerItemState.Id]?.playerItem;
 
-                // アイテムを使用できるか確認
-                if (playerItem != null && playerItemState.Count >= playerItem.Cost && playerItem.CanUse(playerItemState, playerObject))
+                // アイテムを使用できるか確認→使用
+                if (playerItem != null && playerItemState.Count >= playerItem.Cost && playerItem.CanUse(playerItemState, playerBehaviour) && playerItem.DoUse(playerItemState, playerBehaviour))
                 {
                     // アイテム数を減らす
                     playerItemState.Count -= playerItem.Cost;
 
-                    // アイテムを使用
-                    playerItem.DoUse(playerItemState, playerObject);
-
                     return true;
                 }
-
-                Debug.LogError($"アイテム（ID: {playerItemState.Id}）がnullです！");
             }
             else
             {
@@ -114,7 +102,16 @@ namespace Player.Item
         }
 
         /// <summary>
-        /// アイテムとその他オブジェクトを紐づける
+        /// レジストリにアイテムを登録する
+        /// </summary>
+        public void Initialize()
+        {
+            // アイテムを登録する
+            this.Register(new DecoyFortressRegenerator());
+        }
+
+        /// <summary>
+        /// アイテムホルダー
         /// </summary>
         private class PlayerItemHolder
         {
@@ -123,15 +120,9 @@ namespace Player.Item
             /// </summary>
             public IPlayerItem playerItem;
 
-            /// <summary>
-            /// アイテムのGameObject
-            /// </summary>
-            public GameObject gameObject;
-
-            public PlayerItemHolder(IPlayerItem playerItem, GameObject gameObject)  
+            public PlayerItemHolder(IPlayerItem playerItem)  
             {
                 this.playerItem = playerItem;
-                this.gameObject = gameObject;
             }
         }
     }
