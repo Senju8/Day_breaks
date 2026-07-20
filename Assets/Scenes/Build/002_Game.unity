@@ -917,6 +917,7 @@ GameObject:
   m_Component:
   - component: {fileID: 682193330}
   - component: {fileID: 682193329}
+  - component: {fileID: 682193331}
   m_Layer: 0
   m_Name: ExampleFortress
   m_TagString: Fortress
@@ -939,6 +940,7 @@ MonoBehaviour:
   uiPrefab: {fileID: 3452046118694273794, guid: 5610973ae388b36408ba507dbb376287, type: 3}
   uiOffset: {x: 0, y: -0.5, z: 0}
   fortressEnabled: 1
+  fotressID: 0
 --- !u!4 &682193330
 Transform:
   m_ObjectHideFlags: 0
@@ -955,6 +957,18 @@ Transform:
   - {fileID: 1679508178}
   m_Father: {fileID: 1112293070}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &682193331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 682193328}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbcbb60416802564ab7f898ae225cb14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DecoyFortress.DecoyFortressMovement
 --- !u!1 &726823677
 GameObject:
   m_ObjectHideFlags: 0
@@ -2443,6 +2457,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2075766999}
   - component: {fileID: 2075766998}
+  - component: {fileID: 2075767000}
   m_Layer: 0
   m_Name: ExampleFortress (1)
   m_TagString: Fortress
@@ -2465,6 +2480,7 @@ MonoBehaviour:
   uiPrefab: {fileID: 3452046118694273794, guid: 5610973ae388b36408ba507dbb376287, type: 3}
   uiOffset: {x: 0, y: -0.5, z: 0}
   fortressEnabled: 1
+  fotressID: 0
 --- !u!4 &2075766999
 Transform:
   m_ObjectHideFlags: 0
@@ -2481,6 +2497,18 @@ Transform:
   - {fileID: 516047832}
   m_Father: {fileID: 1112293070}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2075767000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2075766997}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbcbb60416802564ab7f898ae225cb14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DecoyFortress.DecoyFortressMovement
 --- !u!1 &2092329735
 GameObject:
   m_ObjectHideFlags: 0
