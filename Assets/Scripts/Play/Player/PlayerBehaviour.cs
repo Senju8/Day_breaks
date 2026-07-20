@@ -4,9 +4,11 @@ using Enemy;
 using Player.Bullet;
 using Player.Item;
 using System.Collections.Generic;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 namespace Player
 {
@@ -51,11 +53,14 @@ namespace Player
         [Header("連射モード")]
         [SerializeField] private bool holdingShootingMode = true;
 
-        [Header("プレイヤーのアイテムスロット")]
-        [SerializeField] private PlayerItemState[] playerItemSlots = new PlayerItemState[0];
+        [Header("アイテムスロット")]
+        [SerializeField] private GameObject slotObject;
 
-        [Header("プレイヤーのマウスホイールの感度")]
-        [SerializeField] private float mouseWheelSensitivity = 0.25F;
+        [Header("アイテムスロットのアニメーション時間（秒）")]
+        [SerializeField] private float slotAnimation = 0.5F;
+
+        [Header("プレイヤーの所持するアイテム")]
+        [SerializeField] private PlayerItemState[] playerItemStates = new PlayerItemState[0];
 
         [Header("アイテム使用後のクールダウン（秒）")]
         [SerializeField] private float usingCooldown = 1.0F;
@@ -63,7 +68,10 @@ namespace Player
         private int remainingHealth;
         private float remainingShootingCooldown;
         private float remainingUsingCooldown;
-        private float selectingSlotPos;
+        private float remainingSlotAnimation;
+
+        private float oldSlotPosition;
+        private float newSlotPosition;
 
         private InputAction move;
         private InputAction sprint;
@@ -73,6 +81,8 @@ namespace Player
         private InputAction scroll;
 
         private new Rigidbody2D rigidbody2D;
+        private Canvas canvas;
+        private GameObject[] slotObjects;
 
         private readonly Dictionary<string, EnemyMovement> interactingEnemies = new();
         private readonly Dictionary<string, PlayerItemBehaviour> interactingPlayerItems = new();
@@ -164,7 +174,89 @@ namespace Player
         /// </summary>
         public PlayerItemState[] PlayerItemSlots
         {
-            get { return (PlayerItemState[])this.playerItemSlots.Clone(); }
+            get { return (PlayerItemState[])this.playerItemStates.Clone(); }
+        }
+
+        /// <summary>
+        /// 選択中のスロット番号
+        /// </summary>
+        public int SelectingSlot
+        {
+            get
+            {
+                if (this.playerItemStates.Length > 0)
+                {
+                    int slot = Mathf.CeilToInt(this.SlotPosition) % this.playerItemStates.Length;
+
+                    if (slot < 0)
+                    {
+                        slot += this.playerItemStates.Length;
+                    }
+
+                    return slot;
+                }
+
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// スロットの位置
+        /// </summary>
+        private float SlotPosition
+        {
+            get
+            {
+                return this.slotAnimation <= 0.0F ? 0.0F : this.newSlotPosition + (this.oldSlotPosition - this.newSlotPosition) * (this.remainingSlotAnimation / this.slotAnimation);
+            }
+        }
+
+        /// <summary>
+        /// スロットのアニメーション補間（0.0F～1.0F）
+        /// </summary>
+        private float SlotStep
+        {
+            get
+            {
+                float step = this.slotAnimation <= 0.0F ? 0.0F : (this.newSlotPosition - this.oldSlotPosition) * (this.remainingSlotAnimation / this.slotAnimation);
+
+                step %= 1.0F;
+
+                if (step < 0.0F)
+                {
+                    step += 1.0F;
+                }
+
+                return step;
+            }
+        }
+
+        /// <summary>
+        /// 選択中のアイテムを使用する
+        /// </summary>
+        public bool UseItem()
+        {
+            PlayerItemState playerItemState = this.GetItem(this.SelectingSlot);
+
+            if (PlayerItemState.IsEmpty(playerItemState))
+            {
+                Debug.Log("空のアイテムスロットを選択しているため、アイテムを使用できませんでした…");
+
+                return false;
+            }
+
+            if (playerItemState.Use(this))
+            {
+                Debug.Log($"プレイヤーがアイテム（ID: {playerItemState.Id}の使用に成功しました！）");
+
+                return true;
+            }
+            else
+            {
+                Debug.Log($"プレイヤーがアイテム（ID: {playerItemState.Id}の使用に失敗しました…");
+
+                return false;
+            }
         }
 
         /// <summary>
@@ -179,9 +271,9 @@ namespace Player
             // 回収できた場合はPlayerItemState.Countを0にする
             if (slot != -1 && playerItemState.Count > 0)
             {
-                playerItemState.Count = 0;
-
                 Debug.Log($"プレイヤーがアイテム（ID: {playerItemState.Id}）を{playerItemState.Count}個、回収しました！");
+
+                playerItemState.Count = 0;
             }
             else
             {
@@ -202,11 +294,11 @@ namespace Player
             PlayerItemState playerItemState;
             int empty = -1;
 
-            for (int i = this.playerItemSlots.Length - 1; i >= 0; --i)
+            for (int i = this.playerItemStates.Length - 1; i >= 0; --i)
             {
-                playerItemState = this.playerItemSlots[i];
+                playerItemState = this.playerItemStates[i];
 
-                if (playerItemState == null || playerItemState.Id == PlayerItemState.EMPTY.Id)
+                if (PlayerItemState.IsEmpty(playerItemState))
                 {
                     // 空のスロット番号を記憶
                     empty = i;
@@ -223,7 +315,7 @@ namespace Player
             // 空のスロットにアイテムを追加
             if (empty >= 0 && id != PlayerItemState.EMPTY.Id)
             {
-                this.playerItemSlots[empty] = new PlayerItemState(id, count);
+                this.playerItemStates[empty] = new PlayerItemState(id, count);
 
                 return empty;
             }
@@ -237,7 +329,7 @@ namespace Player
         /// </summary>
         public PlayerItemState GetItem(string id)
         {
-            int length = this.playerItemSlots.Length;
+            int length = this.playerItemStates.Length;
 
             PlayerItemState playerItemState;
 
@@ -261,28 +353,19 @@ namespace Player
         /// </summary>
         public PlayerItemState GetItem(int slot)
         {
-            if (this.playerItemSlots.Length > 0)
+            if (this.playerItemStates.Length > 0)
             {
-                int index = slot % this.playerItemSlots.Length;
+                int index = slot % this.playerItemStates.Length;
 
                 if (index < 0)
                 {
-                    index += this.playerItemSlots.Length;
+                    index += this.playerItemStates.Length;
                 }
 
-                return this.PlayerItemSlots[index] ?? PlayerItemState.EMPTY;
+                return PlayerItemState.IsEmpty(this.PlayerItemSlots[index]) ? PlayerItemState.EMPTY : this.PlayerItemSlots[index];
             }
 
             return PlayerItemState.EMPTY;
-        }
-
-        /// <summary>
-        /// プレイヤーが選択しているスロット番号を取得する
-        /// </summary>
-        /// <returns></returns>
-        public int GetSelectingSlot()
-        {
-            return Mathf.FloorToInt(this.selectingSlotPos * this.playerItemSlots.Length);
         }
 
         /// <summary>
@@ -293,7 +376,7 @@ namespace Player
             this.remainingHealth = Mathf.Clamp(this.remainingHealth - damageAmount, 0, this.health);
         }
 
-        public void Start()
+        public void Awake()
         {
             // 入力の取得
             InputActionMap playerActions = this.GetComponent<PlayerInput>().currentActionMap;
@@ -308,9 +391,16 @@ namespace Player
             // Rigidbody2Dの取得
             this.rigidbody2D = this.GetComponent<Rigidbody2D>();
 
+            // Canvasの取得
+            this.canvas = this.GetComponentInChildren<Canvas>();
+
             // ステータスの初期化
             this.remainingHealth = this.health;
             this.remainingShootingCooldown = this.shootingCooldown;
+
+            // UIの初期化
+            this.RepaintUI();
+
         }
 
         public void Update()
@@ -318,12 +408,180 @@ namespace Player
             this.Select();
             this.Use();
             this.Shoot();
+            this.RepaintUI();
         }
 
         public void FixedUpdate()
         {
             this.Move();
             this.Follow();
+        }
+
+        /// <summary>
+        /// プレイヤーの移動
+        /// </summary>
+        private void Move()
+        {
+            // 入力を確認
+            if (this.move == null || !this.move.IsPressed())
+                return;
+
+            // Rigidbody2Dを確認
+            if (this.rigidbody2D == null)
+                return;
+
+            // 速度の計算
+            Vector2 direction = this.move.ReadValue<Vector2>();
+            float finalSpeed = this.sprint != null && this.sprint.IsPressed() ? this.sprintSpeed : this.movementSpeed;
+
+            // 速度の適用
+            this.rigidbody2D.linearVelocity = direction * finalSpeed;
+        }
+
+        /// <summary>
+        /// カメラの更新
+        /// </summary>
+        private void Follow()
+        {
+            if (this.cameraFollowingMode && Camera.main != null)
+            {
+                Camera.main.transform.position = new Vector3(this.transform.position.x, this.transform.position.y, Camera.main.transform.position.z);
+            }
+        }
+
+        /// <summary>
+        /// アイテムの選択
+        /// </summary>
+        private void Select()
+        {
+            // アイテムスロットのアニメーションを更新
+            if (this.remainingSlotAnimation > 0.0F)
+            {
+                this.remainingSlotAnimation = Mathf.Max(0.0F, this.remainingSlotAnimation - Time.deltaTime);
+            }
+
+            // 入力を確認
+            if (this.scroll == null)
+                return;
+
+            Vector2 scrollVelocity = this.scroll.ReadValue<Vector2>();
+
+            // スクロール量を確認
+            if (scrollVelocity.y == 0.0F)
+            {
+                return;
+            }
+
+            // アイテムスロットのアニメーションを設定
+            this.oldSlotPosition = this.remainingSlotAnimation > 0.0F ? this.SlotPosition : this.newSlotPosition;
+            this.newSlotPosition += scrollVelocity.y < 0.0F ? -1 : 1;
+            this.remainingSlotAnimation = this.slotAnimation;
+        }
+
+        /// <summary>
+        /// アイテムの使用
+        /// </summary>
+        private void Use()
+        {
+            // クールダウンを減らす
+            if (this.remainingUsingCooldown > 0.0F)
+            {
+                this.remainingUsingCooldown -= Time.deltaTime;
+                return;
+            }
+
+            // 入力を確認
+            if (this.use == null || !this.use.WasPressedThisFrame())
+                return;
+
+            PlayerItemState playerItemState = this.GetItem(this.SelectingSlot);
+
+            if (PlayerItemState.IsEmpty(playerItemState))
+            {
+                Debug.Log("空のアイテムスロットを選択しているため、アイテムを使用できませんでした…");
+
+                return;
+            }
+
+            if (playerItemState.Use(this))
+            {
+                Debug.Log($"プレイヤーがアイテム（ID: {playerItemState.Id}の使用に成功しました！）");
+            }
+            else
+            {
+                Debug.Log($"プレイヤーがアイテム（ID: {playerItemState.Id}の使用に失敗しました…");
+
+                return;
+            }
+
+            // クールダウンを設定
+            this.remainingUsingCooldown = this.usingCooldown;
+        }
+
+        /// <summary>
+        /// プレイヤーの射撃
+        /// </summary>
+        private void Shoot()
+        {
+            // クールダウンを減らす
+            if (this.remainingShootingCooldown > 0.0F)
+            {
+                this.remainingShootingCooldown -= Time.deltaTime;
+                return;
+            }
+
+            // 入力を確認
+            if (this.shoot == null)
+                return;
+
+            if (this.holdingShootingMode)
+            {
+                if (!this.shoot.IsPressed())
+                    return;
+            }
+            else
+            {
+                if (!this.shoot.WasPressedThisFrame())
+                    return;
+            }
+
+            // 弾を確認
+            if (this.bulletObject == null)
+            {
+                Debug.LogWarning("プレイヤーの弾が設定されていません！");
+                return;
+            }
+
+            // シューターを設定
+            GameObject shooterObject = this.shooterObject == null ? this.gameObject : this.shooterObject;
+
+            if (!shooterObject.activeSelf || !shooterObject.activeInHierarchy)
+            {
+                Debug.LogWarning("シューターが非アクティブです！");
+                return;
+            }
+
+            // 弾の位置と速度の計算
+            Vector2 cursorPos = this.cursor.ReadValue<Vector2>();
+            Vector2 shooterPos = shooterObject.transform.position;
+            Vector2 aimPos = Camera.main ? Camera.main.ScreenToWorldPoint(new Vector3(cursorPos.x, cursorPos.y, 0F)) : shooterPos;
+            Vector2 aimDir = Vector2.Normalize(new Vector2(aimPos.x, aimPos.y) - new Vector2(shooterPos.x, shooterPos.y));
+
+            // 弾を射撃
+            GameObject bulletObject = UnityEngine.Object.Instantiate(this.bulletObject, shooterPos + aimDir * this.bulletSpawnDistance, Quaternion.identity);
+            Rigidbody2D rigidbody2D = bulletObject.GetOrAddComponent<Rigidbody2D>();
+            BulletBehaviour bulletBehaviour = bulletObject.GetOrAddComponent<BulletBehaviour>();
+
+            rigidbody2D.mass = 1.0F;
+            rigidbody2D.linearVelocity = aimDir * this.bulletSpeed;
+            rigidbody2D.linearDamping = 0.0F;
+            rigidbody2D.angularDamping = 0.0F;
+            rigidbody2D.gravityScale = 0.0F;
+            bulletBehaviour.AttackDamage = this.attackDamage;
+            bulletBehaviour.Duration = this.bulletDuration;
+
+            // クールダウンを設定
+            this.remainingShootingCooldown = this.shootingCooldown;
         }
 
         public void OnCollisionEnter2D(Collision2D collision) { this.InteractGameObject(collision.gameObject, true); }
@@ -403,7 +661,7 @@ namespace Player
                 }
 
                 // アイテムの回収
-                this.PickUp(playerItemBehaviour);
+                this.PickUpItem(playerItemBehaviour);
 
                 return true;
             }
@@ -466,168 +724,9 @@ namespace Player
         }
 
         /// <summary>
-        /// プレイヤーの移動
-        /// </summary>
-        private void Move()
-        {
-            // 入力を確認
-            if (this.move == null || !this.move.IsPressed())
-                return;
-
-            // Rigidbody2Dを確認
-            if (this.rigidbody2D == null)
-                return;
-
-            // 速度の計算
-            Vector2 direction = this.move.ReadValue<Vector2>();
-            float finalSpeed = this.sprint != null && this.sprint.IsPressed() ? this.sprintSpeed : this.movementSpeed;
-
-            // 速度の適用
-            this.rigidbody2D.linearVelocity = direction * finalSpeed;
-        }
-
-        /// <summary>
-        /// カメラの更新
-        /// </summary>
-        private void Follow()
-        {
-            if (this.cameraFollowingMode && Camera.main != null)
-            {
-                Camera.main.transform.position = new Vector3(this.transform.position.x, this.transform.position.y, Camera.main.transform.position.z);
-            }
-        }
-
-        /// <summary>
-        /// アイテムの選択
-        /// </summary>
-        private void Select()
-        {
-            // 入力を確認
-            if (this.scroll == null)
-                return;
-
-            Vector2 scrollVelocity = this.scroll.ReadValue<Vector2>();
-
-            // スクロール量を確認
-            if (scrollVelocity.sqrMagnitude <= 0.0F)
-                return;
-
-            // 選択中のアイテムスロットの位置を更新
-            this.selectingSlotPos += this.playerItemSlots.Length == 0 ? 0.0F : scrollVelocity.normalized.y / this.playerItemSlots.Length * this.mouseWheelSensitivity;
-            this.selectingSlotPos %= 1.0F;
-
-            if (this.selectingSlotPos < 0.0F)
-            {
-                this.selectingSlotPos += 1.0F;
-            }
-
-            // 誤差を補正
-            this.selectingSlotPos = Mathf.Clamp(this.selectingSlotPos, 0.0F, 1.0F);
-
-            Debug.Log(this.GetSelectingSlot());
-        }
-
-        /// <summary>
-        /// アイテムの使用
-        /// </summary>
-        private void Use()
-        {
-            // クールダウンを減らす
-            if (this.remainingUsingCooldown > 0.0F)
-            {
-                this.remainingUsingCooldown -= Time.deltaTime;
-                return;
-            }
-
-            // 入力を確認
-            if (this.use == null || !this.use.WasPressedThisFrame())
-                return;
-
-            PlayerItemState playerItemState = this.GetItem(this.GetSelectingSlot());
-
-            if (playerItemState.Use(this))
-            {
-                Debug.Log($"プレイヤーがアイテム（ID: {playerItemState.Id}の使用に成功しました！）");
-            }
-            else
-            {
-                Debug.Log($"プレイヤーがアイテム（ID: {playerItemState.Id}の使用に失敗しました…");
-            }
-
-            // クールダウンを設定
-            this.remainingUsingCooldown = this.usingCooldown;
-        }
-
-        /// <summary>
-        /// プレイヤーの射撃
-        /// </summary>
-        private void Shoot()
-        {
-            // クールダウンを減らす
-            if (this.remainingShootingCooldown > 0.0F)
-            {
-                this.remainingShootingCooldown -= Time.deltaTime;
-                return;
-            }
-
-            // 入力を確認
-            if (this.shoot == null)
-                return;
-
-            if (this.holdingShootingMode)
-            {
-                if (!this.shoot.IsPressed())
-                    return;
-            }
-            else
-            {
-                if (!this.shoot.WasPressedThisFrame())
-                    return;
-            }
-
-            // 弾を確認
-            if (this.bulletObject == null)
-            {
-                Debug.LogWarning("プレイヤーの弾が設定されていません！");
-                return;
-            }
-
-            // シューターを設定
-            GameObject shooterObject = this.shooterObject == null ? this.gameObject : this.shooterObject;
-
-            if (!shooterObject.activeSelf || !shooterObject.activeInHierarchy)
-            {
-                Debug.LogWarning("シューターが非アクティブです！");
-                return;
-            }
-
-            // 弾の位置と速度の計算
-            Vector2 cursorPos = this.cursor.ReadValue<Vector2>();
-            Vector2 shooterPos = shooterObject.transform.position;
-            Vector2 aimPos = Camera.main ? Camera.main.ScreenToWorldPoint(new Vector3(cursorPos.x, cursorPos.y, 0F)) : shooterPos;
-            Vector2 aimDir = Vector2.Normalize(new Vector2(aimPos.x, aimPos.y) - new Vector2(shooterPos.x, shooterPos.y));
-
-            // 弾を射撃
-            GameObject bulletObject = UnityEngine.Object.Instantiate(this.bulletObject, shooterPos + aimDir * this.bulletSpawnDistance, Quaternion.identity);
-            Rigidbody2D rigidbody2D = bulletObject.GetOrAddComponent<Rigidbody2D>();
-            BulletBehaviour bulletBehaviour = bulletObject.GetOrAddComponent<BulletBehaviour>();
-
-            rigidbody2D.mass = 1.0F;
-            rigidbody2D.linearVelocity = aimDir * this.bulletSpeed;
-            rigidbody2D.linearDamping = 0.0F;
-            rigidbody2D.angularDamping = 0.0F;
-            rigidbody2D.gravityScale = 0.0F;
-            bulletBehaviour.AttackDamage = this.attackDamage;
-            bulletBehaviour.Duration = this.bulletDuration;
-
-            // クールダウンを設定
-            this.remainingShootingCooldown = this.shootingCooldown;
-        }
-
-        /// <summary>
         /// アイテムの回収
         /// </summary>
-        private void PickUp(PlayerItemBehaviour playerItemBehaviour)
+        private void PickUpItem(PlayerItemBehaviour playerItemBehaviour)
         {
             if (playerItemBehaviour != null && playerItemBehaviour.enabled)
             {
@@ -635,6 +734,163 @@ namespace Player
                 {
                     // PlayerItemBehaviourを消す
                     UnityEngine.Object.Destroy(playerItemBehaviour.gameObject);
+                }
+            }
+        }
+
+        /// <summary>
+        /// UIの更新
+        /// </summary>
+        private void RepaintUI()
+        {
+            if (this.slotObject == null || this.canvas == null)
+                return;
+
+            // アイテムスロットの表示数
+            int slotCounts = 7;
+
+            // アイテムスロットのサイズ
+            float slotSize = 128.0F;
+
+            // 配列の初期化
+            if (this.slotObjects == null)
+            {
+                this.slotObjects = new GameObject[slotCounts];
+            }
+
+            // アイテムスロットの位置を計算
+            RectTransform canvasTransform = this.canvas.GetComponent<RectTransform>();
+            float width = canvasTransform.sizeDelta.x;
+            float height = canvasTransform.sizeDelta.y;
+            float slotMovement = this.SlotStep;
+            float slotScale;
+            float alphaScale;
+            int offset = slotCounts >> 1;
+            int selectingSlot = this.SelectingSlot;
+            bool isBlinking;
+
+            GameObject slotObject;
+            GameObject uiObject;
+            Image uiImage;
+            TextMeshProUGUI uiTextMeshPro;
+
+            PlayerItemState playerItemState;
+            PlayerItemRegistry.PlayerItemHolder itemHolder;
+            PlayerItemRegistry.PlayerItemSpriteHolder spriteHolder;
+
+            for (int i = 0; i < slotCounts; ++i)
+            {
+                slotObject = this.slotObjects[i];
+
+                // アイテムスロットを生成
+                if (slotObject == null)
+                {
+                    this.slotObjects[i] = slotObject = UnityEngine.Object.Instantiate(this.slotObject, Vector3.zero, Quaternion.identity, this.canvas.transform);
+                }
+
+                // アイテムスロットを移動
+                slotScale = 1.0F - Mathf.Abs((i + slotMovement - offset) / slotCounts);
+                alphaScale = slotScale * slotScale;
+
+                slotObject.transform.position = new(width - slotSize, height * 0.5F + (i + slotMovement - offset) * slotSize * slotScale, 0.0F); // 位置
+                slotObject.transform.localScale = new(slotScale * 0.5F, slotScale * 0.5F, 1.0F); // スケール
+                slotObject.transform.SetSiblingIndex(offset - Mathf.Abs(i - offset)); // 表示順
+
+                // アイテムスロットのサイズ変更
+                if (slotObject.transform is RectTransform slotTransform)
+                {
+                    slotTransform.sizeDelta = new(slotSize, slotSize);
+                }
+
+                // アイテムスロットの表示
+                if (slotObject.transform.childCount >= 3)
+                {
+                    playerItemState = this.GetItem(selectingSlot - offset + i); // 表示されるPlayerItemState
+
+                    isBlinking = i == offset && this.use != null && this.use.IsPressed(); // UIの点滅（Shift入力）
+
+                    // 背景を設定
+                    uiObject = slotObject.transform.GetChild(0).gameObject;
+                    uiImage = uiObject?.GetComponent<Image>();
+
+                    if (uiObject.transform is RectTransform backgroundTransform)
+                    {
+                        backgroundTransform.sizeDelta = new(slotSize, slotSize);
+                    }
+
+                    if (uiImage != null)
+                    {
+                        uiImage.color = isBlinking ? new(0.75F, 0.75F, 0.75F, 0.25F * alphaScale) : new(0.0F, 0.0F, 0.0F, 0.5F * alphaScale);
+                    }
+
+                    // アイテムの表示を設定
+                    uiObject = slotObject.transform.GetChild(1).gameObject;
+                    uiImage = uiObject?.GetComponent<Image>();
+
+                    if (uiObject.transform is RectTransform displayTransform)
+                    {
+                        displayTransform.sizeDelta = new(slotSize, slotSize);
+                    }
+
+                    if (uiImage != null)
+                    {
+                        // 色の設定
+                        uiImage.color = new(1.0F, 1.0F, 1.0F, alphaScale);
+
+                        // スプライトの設定
+                        spriteHolder = PlayerItemRegistry.INSTANCE.GetSprite(playerItemState.Id);
+
+                        if (spriteHolder != null && spriteHolder.sprite != null)
+                        {
+                            uiImage.sprite = spriteHolder.sprite;
+                            uiImage.enabled = true;
+                        }
+                        else
+                        {
+                            uiImage.sprite = null;
+                            uiImage.enabled = false;
+                        }
+                    }
+
+                    // アイテムの個数を設定
+                    uiObject = slotObject.transform.GetChild(2).gameObject;
+                    uiTextMeshPro = uiObject?.GetComponent<TextMeshProUGUI>();
+
+                    if (uiObject.transform is RectTransform countTransform)
+                    {
+                        countTransform.sizeDelta = new(slotSize, slotSize);
+                    }
+
+                    if (uiTextMeshPro != null)
+                    {
+                        uiTextMeshPro.text = playerItemState.Count > 0 ? $"× {playerItemState.Count}" : "";
+                        uiTextMeshPro.color = isBlinking ? new(1.0F, 0.75F, 0.0F, alphaScale) : new(1.0F, 1.0F, 1.0F, alphaScale);
+                    }
+
+                    // アイテムの名前を設定
+                    uiObject = slotObject.transform.GetChild(3).gameObject;
+                    uiTextMeshPro = uiObject?.GetComponent<TextMeshProUGUI>();
+
+                    if (uiObject.transform is RectTransform nameTransform)
+                    {
+                        nameTransform.sizeDelta = new(slotSize, slotSize);
+                    }
+
+                    if (uiTextMeshPro != null)
+                    {
+                        if (!PlayerItemState.IsEmpty(playerItemState))
+                        {
+                            itemHolder = PlayerItemRegistry.INSTANCE.Get(playerItemState.Id);
+
+                            uiTextMeshPro.text = itemHolder != null && itemHolder.playerItem != null ? itemHolder.playerItem.Name : playerItemState.Id;
+                        }
+                        else
+                        {
+                            uiTextMeshPro.text = "None";
+                        }
+
+                        uiTextMeshPro.color = isBlinking ? new(1.0F, 0.75F, 0.0F, alphaScale) : new(1.0F, 1.0F, 1.0F, alphaScale);
+                    }
                 }
             }
         }
