@@ -79,7 +79,7 @@ namespace Player
         private InputAction cursor;
         private InputAction scroll;
 
-        private new Rigidbody2D rigidbody2d;
+        private Rigidbody2D rigidbody2d;
         private GameObject shooterInstance;
         private Canvas canvas;
         private GameObject[] slotObjects;

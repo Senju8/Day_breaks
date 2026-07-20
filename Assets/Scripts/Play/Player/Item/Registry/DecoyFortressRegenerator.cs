@@ -6,17 +6,13 @@ namespace Player.Item
     /// <summary>
     /// DecoyFortressを復活させるアイテム
     /// </summary>
-    public class DecoyFortressRegenerator : IPlayerItem
+    public abstract class DecoyFortressRegenerator : IPlayerItem
     {
-        public string Id
-        {
-            get { return "decoy_fortress_regenerator"; }
-        }
+        public abstract string Id { get; }
 
-        public string Name
-        {
-            get { return "Decoy Fortress Regenerator"; }
-        }
+        public abstract string Name { get; }
+
+        public abstract DecoyFortressSetting.DecoyFortressIDs DecoyFortressID { get; }
 
         public bool CanUse(PlayerItemState playerItemState, PlayerBehaviour playerBehaviour)
         {
@@ -30,16 +26,21 @@ namespace Player.Item
             {
                 if (decoyFortressSetting != null && decoyFortressSetting.enabled && !decoyFortressSetting.GetEnable())
                 {
-                    // DecoyFortressを復活させる
-                    decoyFortressSetting.Build();
-
-                    Debug.Log($"Decoy Fortressが復活しました！（ID: {decoyFortressSetting.GetInstanceID()}）");
+                    this.DoUse(playerItemState, playerBehaviour, decoyFortressSetting);
 
                     return true;
                 }
             }
 
             return false;
+        }
+
+        public virtual void DoUse(PlayerItemState playerItemState, PlayerBehaviour playerBehaviour, DecoyFortressSetting decoyFortressSetting)
+        {
+            // DecoyFortressを復活させる
+            decoyFortressSetting.Build();
+
+            Debug.Log($"Decoy Fortressが復活しました！（ID: {this.DecoyFortressID}, Instance: {decoyFortressSetting.GetInstanceID()}）");
         }
     }
 }

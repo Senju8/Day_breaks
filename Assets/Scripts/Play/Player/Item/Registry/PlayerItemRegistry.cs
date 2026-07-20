@@ -171,7 +171,11 @@ namespace Player.Item
         public void Initialize()
         {
             // アイテムを登録する
-            this.Register(new DecoyFortressRegenerator());
+            this.Register(new NormalDecoyFortressRegenerator());
+            this.Register(new StopDecoyFortressRegenerator());
+            this.Register(new CandleDecoyFortressRegenerator());
+            this.Register(new SwordDecoyFortressRegenerator());
+            this.Register(new BombDecoyFortressRegenerator());
         }
 
         /// <summary>
