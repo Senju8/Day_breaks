@@ -510,6 +510,8 @@ namespace Player
             else
             {
                 Debug.Log($"プレイヤーがアイテム（ID: {playerItemState.Id}の使用に失敗しました…");
+
+                return;
             }
 
             // クールダウンを設定
@@ -760,11 +762,12 @@ namespace Player
             RectTransform canvasTransform = this.canvas.GetComponent<RectTransform>();
             float width = canvasTransform.sizeDelta.x;
             float height = canvasTransform.sizeDelta.y;
-            float movement = this.SlotStep;
+            float slotMovement = this.SlotStep;
             float slotScale;
             float alphaScale;
             int offset = slotCounts >> 1;
-            int order;
+            int selectingSlot = this.SelectingSlot;
+            bool isBlinking;
 
             GameObject slotObject;
             GameObject uiObject;
@@ -778,7 +781,6 @@ namespace Player
             for (int i = 0; i < slotCounts; ++i)
             {
                 slotObject = this.slotObjects[i];
-                order = Mathf.Abs(offset - i);
 
                 // アイテムスロットを生成
                 if (slotObject == null)
@@ -787,12 +789,12 @@ namespace Player
                 }
 
                 // アイテムスロットを移動
-                slotScale = 1.0F - Mathf.Abs((i + movement - offset) / slotCounts);
+                slotScale = 1.0F - Mathf.Abs((i + slotMovement - offset) / slotCounts);
                 alphaScale = slotScale * slotScale;
 
-                slotObject.transform.position = new(width - slotSize, height * 0.5F + (i + movement - offset) * slotSize * slotScale, 0.0F);
-                slotObject.transform.localScale = new(slotScale * 0.5F, slotScale * 0.5F, 1.0F);
-                slotObject.transform.SetSiblingIndex(order);
+                slotObject.transform.position = new(width - slotSize, height * 0.5F + (i + slotMovement - offset) * slotSize * slotScale, 0.0F); // 位置
+                slotObject.transform.localScale = new(slotScale * 0.5F, slotScale * 0.5F, 1.0F); // スケール
+                slotObject.transform.SetSiblingIndex(offset - Mathf.Abs(i - offset)); // 表示順
 
                 // アイテムスロットのサイズ変更
                 if (slotObject.transform is RectTransform slotTransform)
@@ -803,7 +805,9 @@ namespace Player
                 // アイテムスロットの表示
                 if (slotObject.transform.childCount >= 3)
                 {
-                    playerItemState = this.GetItem(this.SelectingSlot - offset + i);
+                    playerItemState = this.GetItem(selectingSlot - offset + i); // 表示されるPlayerItemState
+
+                    isBlinking = i == offset && this.use != null && this.use.IsPressed(); // UIの点滅（Shift入力）
 
                     // 背景を設定
                     uiObject = slotObject.transform.GetChild(0).gameObject;
@@ -816,7 +820,7 @@ namespace Player
 
                     if (uiImage != null)
                     {
-                        uiImage.color = new(0.0F, 0.0F, 0.0F, 0.5F * alphaScale);
+                        uiImage.color = isBlinking ? new(0.75F, 0.75F, 0.75F, 0.25F * alphaScale) : new(0.0F, 0.0F, 0.0F, 0.5F * alphaScale);
                     }
 
                     // アイテムの表示を設定
@@ -831,7 +835,7 @@ namespace Player
                     if (uiImage != null)
                     {
                         // 色の設定
-                        uiImage.color = new(1.0F, 1.0F, 1.0F, 1.0F * alphaScale);
+                        uiImage.color = new(1.0F, 1.0F, 1.0F, alphaScale);
 
                         // スプライトの設定
                         spriteHolder = PlayerItemRegistry.INSTANCE.GetSprite(playerItemState.Id);
@@ -860,7 +864,7 @@ namespace Player
                     if (uiTextMeshPro != null)
                     {
                         uiTextMeshPro.text = playerItemState.Count > 0 ? $"× {playerItemState.Count}" : "";
-                        uiTextMeshPro.color = new(1.0F, 1.0F, 1.0F, 1.0F * alphaScale);
+                        uiTextMeshPro.color = isBlinking ? new(1.0F, 0.75F, 0.0F, alphaScale) : new(1.0F, 1.0F, 1.0F, alphaScale);
                     }
 
                     // アイテムの名前を設定
@@ -874,18 +878,18 @@ namespace Player
 
                     if (uiTextMeshPro != null)
                     {
-                        itemHolder = PlayerItemRegistry.INSTANCE.Get(playerItemState.Id);
-
-                        if (itemHolder != null && itemHolder.playerItem != null)
+                        if (!PlayerItemState.IsEmpty(playerItemState))
                         {
-                            uiTextMeshPro.text = itemHolder.playerItem.Name;
+                            itemHolder = PlayerItemRegistry.INSTANCE.Get(playerItemState.Id);
+
+                            uiTextMeshPro.text = itemHolder != null && itemHolder.playerItem != null ? itemHolder.playerItem.Name : playerItemState.Id;
                         }
                         else
                         {
-                            uiTextMeshPro.text = "Unknown";
+                            uiTextMeshPro.text = "None";
                         }
 
-                        uiTextMeshPro.color = new(1.0F, 1.0F, 1.0F, 1.0F * alphaScale);
+                        uiTextMeshPro.color = isBlinking ? new(1.0F, 0.75F, 0.0F, alphaScale) : new(1.0F, 1.0F, 1.0F, alphaScale);
                     }
                 }
             }

@@ -60,10 +60,11 @@ namespace Player.Bullet
         public void OnTriggerEnter2D(Collider2D collider2D)
         {
             this.Attack(collider2D.gameObject);
+            this.Walls(collider2D.gameObject);
         }
 
         /// <summary>
-        /// 衝突したものにダメージを与える
+        /// 衝突したEntityMovementにダメージを与える
         /// </summary>
         private void Attack(GameObject gameObject)
         {
@@ -82,6 +83,32 @@ namespace Player.Bullet
 
                     // 弾を消す
                     UnityEngine.Object.Destroy(this.gameObject);
+                }
+            }
+        }
+
+        /// <summary>
+        ///  Wallsとの衝突
+        /// </summary>
+        private void Walls(GameObject gameObject, int level = 0)
+        {
+            if (level < 0)
+                return;
+
+            Transform parentTransform = gameObject.transform.parent;
+
+            // 親Transformが"Walls"かどうか確認
+            if (parentTransform != null && parentTransform.gameObject != null)
+            {
+                if (parentTransform.gameObject.name == "Walls")
+                {
+                    // 弾を消す
+                    UnityEngine.Object.Destroy(this.gameObject);
+                }
+                else
+                {
+                    // さらに上の階層を確認
+                    this.Walls(gameObject, level - 1);
                 }
             }
         }
