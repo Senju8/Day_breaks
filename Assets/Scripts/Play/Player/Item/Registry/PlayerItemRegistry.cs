@@ -30,6 +30,9 @@ namespace Player.Item
             this.Initialize();
         }
 
+        /// <summary>
+        /// アイテムをまとめて登録する
+        /// </summary>
         public bool Register(params IPlayerItem[] playerItems)
         {
             bool isRegisteredAll = true;
@@ -180,7 +183,7 @@ namespace Player.Item
         /// <summary>
         /// レジストリにアイテムを登録する
         /// </summary>
-        public void Initialize()
+        private void Initialize()
         {
             // アイテムを登録する
             this.Register
