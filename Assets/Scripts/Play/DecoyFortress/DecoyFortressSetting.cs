@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace DecoyFortress
@@ -53,6 +54,10 @@ namespace DecoyFortress
         /// 初期値はNormal
         /// </summary>
         [SerializeField] private DecoyFortressIDs fotressID = DecoyFortressIDs.Normal;
+
+        [SerializeField] private DecoyFortressRange range;
+        [SerializeField] private float effectRange = 2f;
+
         /// <summary>
         /// 罠砦の初期化処理
         /// 
@@ -61,6 +66,11 @@ namespace DecoyFortress
         public void Initialize()
         {
             fortressHP = FortressMaxHP;
+
+            if(range != null)
+            {
+                range.SetRadius(effectRange);
+            }
 
             // 有効フラグの状態に合わせてUIを動的生成・初期化
             HandleUIInitialization();

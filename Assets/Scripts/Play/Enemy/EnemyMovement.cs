@@ -328,6 +328,7 @@ namespace Enemy
             if(enemyHP - amount > 0)
             {
                 enemyHP -= amount;
+                Debug.Log("うっひょー");
             }
             else
             {
@@ -347,6 +348,24 @@ namespace Enemy
                 }
                 Destroy(gameObject);
             }
+        }
+
+        /// <summary>
+        /// 罠砦の鈍足化効果による移動速度のダウン
+        /// </summary>
+        public void ApplySlow()
+        {
+            enemySpeed *= 0.8f;
+        }
+
+        /// <summary>
+        /// 透明な敵(Blinded)の動き
+        /// 
+        /// 1秒ごとにフェードインフェードアウト
+        /// </summary>
+        private void FadeInFadeOut()
+        {
+
         }
     }
 }

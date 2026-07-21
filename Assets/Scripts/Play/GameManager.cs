@@ -52,6 +52,7 @@ namespace Play
                 enemyManager.OnUpdate();
                 enemySpawner.OnUpdate();
                 gameTimer.OnUpdate();
+                decoyFortressManager.OnUpdate();
             }
         }
 

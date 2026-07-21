@@ -7,6 +7,8 @@ namespace DecoyFortress
     /// </summary>
     public class DecoyFortressMovement : MonoBehaviour
     {
+        [SerializeField] private DecoyFortressRange range;
+        
         /// <summary>
         /// 同オブジェクトのDecoyFortressSetting
         /// </summary>
@@ -18,7 +20,8 @@ namespace DecoyFortress
         }
 
         /// <summary>
-        /// 
+        /// 更新処理
+        /// 砦の種類に応じた動きを行う
         /// </summary>
         public void OnUpdate()
         {
@@ -29,24 +32,43 @@ namespace DecoyFortress
             {
 
                 case DecoyFortressSetting.DecoyFortressIDs.Stop:
-
+                    SpeedDown();
                     break;
                 case DecoyFortressSetting.DecoyFortressIDs.Candle:
-
+                    Debug.Log("アヒージョ");
+                    Attack(2);
                     break;
                 case DecoyFortressSetting.DecoyFortressIDs.Sword:
-
+                    Attack(1);
                     break;
             }
         }
 
         /// <summary>
+        /// candle,swordの砦の動き
         /// 
+        /// 範囲内の敵にダメージを与える
         /// </summary>
         /// <param name="amount">攻撃力</param>
-        private void Attack(float amount)
+        private void Attack(int amount)
         {
+            foreach (var enemy in range.GetEnemiesInRange())
+            {
+                enemy.OnDamagedByPlayer(amount);
+            }
+        }
 
+        /// <summary>
+        /// stopの砦の動き
+        /// 
+        /// 範囲内の敵の素早さを遅くする
+        /// </summary>
+        private void SpeedDown()
+        {
+            foreach (var enemy in range.GetEnemiesInRange())
+            {
+                enemy.ApplySlow();
+            }
         }
     }
 }
