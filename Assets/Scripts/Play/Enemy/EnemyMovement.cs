@@ -336,19 +336,13 @@ namespace Enemy
                 switch(enemyID)
                 {
                     case EnemyIDs.Normal:
-                        ItemDropSpawner.INSTANCE.Drop("normal_decoy_fortress_regenerator", transform.position);
+                        ItemDropSpawner.INSTANCE.Drop("candle_decoy_fortress_regenerator", transform.position);
                         break;
                     case EnemyIDs.Speed:
                         ItemDropSpawner.INSTANCE.Drop("stop_decoy_fortress_regenerator", transform.position);
                         break;
                     case EnemyIDs.Powerful:
                         ItemDropSpawner.INSTANCE.Drop("sword_decoy_fortress_regenerator", transform.position);
-                        break;
-                    case EnemyIDs.Large:
-                        ItemDropSpawner.INSTANCE.Drop("bomb_decoy_fortress_regenerator", transform.position);
-                        break;
-                    case EnemyIDs.Blinded:
-                        ItemDropSpawner.INSTANCE.Drop("candle_decoy_fortress_regenerator", transform.position);
                         break;
                 }
                 Destroy(gameObject);
