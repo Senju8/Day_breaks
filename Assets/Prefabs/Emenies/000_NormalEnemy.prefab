@@ -152,7 +152,7 @@ GameObject:
   - component: {fileID: 6701810702901623394}
   - component: {fileID: 5591346575626076143}
   m_Layer: 0
-  m_Name: 004_BigEnemy
+  m_Name: 000_NormalEnemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -188,7 +188,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Enemy.EnemyMovement
   enemyHP: 100
   enemySpeed: 0.5
-  enemyDamage: 75
+  enemyDamage: 10
   enemyAttackRange: 0.2
   enemyChasingRange: 0.1
   enemyCoolDown: 2

@@ -812,9 +812,12 @@ MonoBehaviour:
   - spawnTime: 0
     spawnPosition: {x: 0, y: -2}
     enemyPrefab: {fileID: 5591346575626076143, guid: 21c6ae40c45d70846a04a24443468e39, type: 3}
+  - spawnTime: 5
+    spawnPosition: {x: 2, y: 2}
+    enemyPrefab: {fileID: 5591346575626076143, guid: b9503152e2a0bea45a80c60eb10ee64a, type: 3}
   - spawnTime: 10
     spawnPosition: {x: 2, y: 2}
-    enemyPrefab: {fileID: 5591346575626076143, guid: 21c6ae40c45d70846a04a24443468e39, type: 3}
+    enemyPrefab: {fileID: 5591346575626076143, guid: 0a1fde5c7cdb1f04b99e1cd016861d4b, type: 3}
   enemyManager: {fileID: 1969045256}
 --- !u!4 &643085152
 Transform:
@@ -831,82 +834,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &671870035
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 5881919303165572828, guid: 23fb7253a11f40540b4f1d03d0026258, type: 3}
-      propertyPath: m_Name
-      value: 004_BigEnemy
-      objectReference: {fileID: 0}
-    - target: {fileID: 6701810702901623394, guid: 23fb7253a11f40540b4f1d03d0026258, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6701810702901623394, guid: 23fb7253a11f40540b4f1d03d0026258, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6701810702901623394, guid: 23fb7253a11f40540b4f1d03d0026258, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -3
-      objectReference: {fileID: 0}
-    - target: {fileID: 6701810702901623394, guid: 23fb7253a11f40540b4f1d03d0026258, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -3
-      objectReference: {fileID: 0}
-    - target: {fileID: 6701810702901623394, guid: 23fb7253a11f40540b4f1d03d0026258, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6701810702901623394, guid: 23fb7253a11f40540b4f1d03d0026258, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6701810702901623394, guid: 23fb7253a11f40540b4f1d03d0026258, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6701810702901623394, guid: 23fb7253a11f40540b4f1d03d0026258, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6701810702901623394, guid: 23fb7253a11f40540b4f1d03d0026258, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6701810702901623394, guid: 23fb7253a11f40540b4f1d03d0026258, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6701810702901623394, guid: 23fb7253a11f40540b4f1d03d0026258, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6701810702901623394, guid: 23fb7253a11f40540b4f1d03d0026258, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 23fb7253a11f40540b4f1d03d0026258, type: 3}
---- !u!114 &671870036 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5591346575626076143, guid: 23fb7253a11f40540b4f1d03d0026258, type: 3}
-  m_PrefabInstance: {fileID: 671870035}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3ba69218eef409745bc3de4e8e38eee0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Enemy.EnemyMovement
 --- !u!1 &682193328
 GameObject:
   m_ObjectHideFlags: 0
@@ -2391,8 +2318,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8218b9e82b48c24481c4000f3dbd494, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Enemy.EnemyManager
-  enemies:
-  - {fileID: 671870036}
+  enemies: []
   castleManager: {fileID: 726823678}
   decoyFortressManager: {fileID: 1012760026}
   playerBehaviour: {fileID: 267405070}
@@ -2707,6 +2633,5 @@ SceneRoots:
   - {fileID: 643085152}
   - {fileID: 1112293070}
   - {fileID: 726823679}
-  - {fileID: 671870035}
   - {fileID: 1060496445}
   - {fileID: 267405069}

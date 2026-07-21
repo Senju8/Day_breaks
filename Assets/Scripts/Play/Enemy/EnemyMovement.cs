@@ -19,22 +19,41 @@ namespace Enemy
         }
 
         /// <summary>
+        /// 敵の種類を定義
+        /// 
+        /// 種類に応じたアイテムを落とす
+        /// </summary>
+        public enum EnemyIDs
+        {
+            Normal,
+            Speed,      // Normalの1.5倍のスピード
+            Powerful,   // Normalの1.5倍の攻撃力
+            Large,      // でかい
+            Blinded     // デモ:透明になる
+        }
+
+        /// <summary>
+        /// 敵の種別
+        /// 
+        /// デフォルトはNormal
+        /// </summary>
+        [Header("種別")]
+        [SerializeField] EnemyIDs enemyID = EnemyIDs.Normal;
+
+        /// <summary>
         /// 敵のHP
         /// </summary>
-        [Header("敵のHP")]
-        [SerializeField] private int enemyHP = 100;
+        private int enemyHP = 100;
 
         /// <summary>
         /// 敵の移動速度
         /// </summary>
-        [Header("敵の移動速度")]
-        [SerializeField] private float enemySpeed = 5f;
+        private float enemySpeed = 5f;
 
         /// <summary>
         /// 敵が与えるダメージ量
         /// </summary>
-        [Header("敵が与えるダメージ量")]
-        [SerializeField] private int enemyDamage = 10;
+        private int enemyDamage = 5;
 
         /// <summary>
         /// 敵の攻撃範囲
@@ -75,6 +94,21 @@ namespace Enemy
 
         public void Initialize()
         {
+            // 種別に応じたステータスに変更
+            switch(enemyID)
+            {
+                case EnemyIDs.Normal:
+                    break;
+                case EnemyIDs.Speed:
+                    break;
+                case EnemyIDs.Powerful:
+                    break;
+                case EnemyIDs.Large:
+                    break;
+                case EnemyIDs.Blinded:
+                    break;
+            }
+
             var hitboxMarker = GetComponentInChildren<HitboxMarker>();
 
             if (hitboxMarker == null) return;
@@ -287,8 +321,25 @@ namespace Enemy
             else
             {
                 enemyHP = 0;
-                // アイテムの生成
-                ItemDropSpawner.INSTANCE.Drop("decoy_fortress_regenerator", transform.position);
+                // 種別に応じたアイテムの生成
+                switch(enemyID)
+                {
+                    case EnemyIDs.Normal:
+                        ItemDropSpawner.INSTANCE.Drop("normal_decoy_fortress_regenerator", transform.position);
+                        break;
+                    case EnemyIDs.Speed:
+                        ItemDropSpawner.INSTANCE.Drop("stop_decoy_fortress_regenerator", transform.position);
+                        break;
+                    case EnemyIDs.Powerful:
+                        ItemDropSpawner.INSTANCE.Drop("sword_decoy_fortress_regenerator", transform.position);
+                        break;
+                    case EnemyIDs.Large:
+                        ItemDropSpawner.INSTANCE.Drop("bomb_decoy_fortress_regenerator", transform.position);
+                        break;
+                    case EnemyIDs.Blinded:
+                        ItemDropSpawner.INSTANCE.Drop("candle_decoy_fortress_regenerator", transform.position);
+                        break;
+                }
                 Destroy(gameObject);
             }
         }
