@@ -1,4 +1,5 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace DecoyFortress
@@ -58,6 +59,10 @@ namespace DecoyFortress
         [SerializeField] private DecoyFortressRange range;
         [SerializeField] private float effectRange = 2f;
 
+        [SerializeField] private SpriteRenderer fortressSpriteRenderer;
+        [SerializeField] private Sprite beforeBuildSprite;
+        [SerializeField] private Sprite afterBuildSprite;
+
         /// <summary>
         /// 罠砦の初期化処理
         /// 
@@ -74,6 +79,8 @@ namespace DecoyFortress
 
             // 有効フラグの状態に合わせてUIを動的生成・初期化
             HandleUIInitialization();
+
+            UpdateAppearance();
         }
 
         /// <summary>
@@ -125,6 +132,7 @@ namespace DecoyFortress
                 {
                     fortressUI.UpdateHP(fortressHP);
                     fortressUI.SetActive(false); // 壊れたら非表示
+                    UpdateAppearance();
                 }
             }
             else
@@ -163,6 +171,8 @@ namespace DecoyFortress
             {
                 fortressUI.SetActive(fortressEnabled);
             }
+
+            UpdateAppearance();
         }
 
         /// <summary>
@@ -183,6 +193,23 @@ namespace DecoyFortress
         public DecoyFortressIDs GetID()
         {
             return this.fotressID;
+        }
+
+        /// <summary>
+        /// 見た目のスプライトを変更する
+        /// </summary>
+        private void UpdateAppearance()
+        {
+            if (fortressSpriteRenderer != null)
+            {
+                fortressSpriteRenderer.sprite =
+                    fortressEnabled ? afterBuildSprite : beforeBuildSprite;
+            }
+
+            if (range != null)
+            {
+                range.SetRangeVisible(fortressEnabled); 
+            }
         }
     }
 }

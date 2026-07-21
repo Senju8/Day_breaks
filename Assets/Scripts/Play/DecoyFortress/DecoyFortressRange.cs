@@ -74,5 +74,17 @@ namespace DecoyFortress
             );
             return enemiesInRange;
         }
+
+        /// <summary>
+        /// 範囲について見た目が見えるか見えないかを切り替える
+        /// </summary>
+        /// <param name="visible"></param>
+        public void SetRangeVisible(bool visible)
+        {
+            if (rangeSprite != null)
+            {
+                rangeSprite.enabled = visible;
+            }
+        }
     }
 }

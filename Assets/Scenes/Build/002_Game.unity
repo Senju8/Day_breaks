@@ -1732,6 +1732,11 @@ Transform:
   - {fileID: 2108089434}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!212 &1647841354 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 2553741111818666133, guid: 93e9c00f98116dd4bbeb1b8cbd1e8217, type: 3}
+  m_PrefabInstance: {fileID: 791179715810314348}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1860219767
 GameObject:
   m_ObjectHideFlags: 0
@@ -2304,14 +2309,30 @@ PrefabInstance:
       propertyPath: m_Radius
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 2553741111818666133, guid: 93e9c00f98116dd4bbeb1b8cbd1e8217, type: 3}
+      propertyPath: m_DrawMode
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3174676222069867307, guid: 93e9c00f98116dd4bbeb1b8cbd1e8217, type: 3}
       propertyPath: effectRange
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3174676222069867307, guid: 93e9c00f98116dd4bbeb1b8cbd1e8217, type: 3}
       propertyPath: fortressEnabled
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3174676222069867307, guid: 93e9c00f98116dd4bbeb1b8cbd1e8217, type: 3}
+      propertyPath: afterBuildSprite
+      value: 
+      objectReference: {fileID: -1898811598795931168, guid: b4dc4b7a05b7027499069877f7f2ace2, type: 3}
+    - target: {fileID: 3174676222069867307, guid: 93e9c00f98116dd4bbeb1b8cbd1e8217, type: 3}
+      propertyPath: beforeBuildSprite
+      value: 
+      objectReference: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+    - target: {fileID: 3174676222069867307, guid: 93e9c00f98116dd4bbeb1b8cbd1e8217, type: 3}
+      propertyPath: fortressSpriteRenderer
+      value: 
+      objectReference: {fileID: 1647841354}
     - target: {fileID: 5258576414330788664, guid: 93e9c00f98116dd4bbeb1b8cbd1e8217, type: 3}
       propertyPath: m_LocalPosition.x
       value: -5
