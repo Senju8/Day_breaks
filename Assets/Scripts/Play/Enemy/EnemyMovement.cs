@@ -29,7 +29,7 @@ namespace Enemy
             Speed,      // Normalの1.5倍のスピード
             Powerful,   // Normalの1.5倍の攻撃力
             Large,      // でかい
-            Blinded     // デモ:透明になる
+            Blinded     // 透明になる
         }
 
         /// <summary>
@@ -93,6 +93,13 @@ namespace Enemy
 
         private float attackTimer;
 
+        /// <summary>
+        /// 透明敵用:子オブジェクトのスプライトを参照
+        /// </summary>
+        private SpriteRenderer spriteRenderer;
+        private float fadeTimer = 0;
+        private float currentAlpha = 1.0f;
+
         public void Initialize()
         {
             // 種別に応じたステータスに変更
@@ -114,6 +121,7 @@ namespace Enemy
                     enemyDamage = 5;
                     break;
                 case EnemyIDs.Blinded:
+                    spriteRenderer = GetComponentInChildren<SpriteRenderer>();
                     enemyHP = 2;
                     enemyDamage *= 0.8f;
                     enemySpeed *= 0.8f;
@@ -134,6 +142,11 @@ namespace Enemy
 
         public void OnUpdate()
         {
+            if(enemyID == EnemyIDs.Blinded)
+            {
+                FadeInFadeOut();
+            }
+
             switch (currentState)
             {
                 case EnemyState.Chasing:
@@ -325,6 +338,9 @@ namespace Enemy
         /// <param name="amount"></param>
         public void OnDamagedByPlayer(int amount)
         {
+            // 透明敵は透明度が0.8未満なら攻撃を受けない
+            if (enemyID == EnemyIDs.Blinded && currentAlpha < 0.8f) return;
+
             if(enemyHP - amount > 0)
             {
                 enemyHP -= amount;
@@ -347,6 +363,35 @@ namespace Enemy
                 }
                 Destroy(gameObject);
             }
+        }
+
+        /// <summary>
+        /// 罠砦の鈍足化効果による移動速度のダウン
+        /// </summary>
+        public void ApplySlow()
+        {
+            enemySpeed *= 0.8f;
+        }
+
+        /// <summary>
+        /// 透明な敵(Blinded)の動き
+        /// 
+        /// 1秒ごとにフェードインフェードアウト
+        /// </summary>
+        private void FadeInFadeOut()
+        {
+            if (spriteRenderer == null) return;
+
+            fadeTimer += Time.deltaTime;
+
+            float t = Mathf.PingPong(fadeTimer, 1f);
+
+            currentAlpha = Mathf.Lerp(0.0f, 1.0f, t);
+
+            Color color = spriteRenderer.color;
+            color.a = currentAlpha;
+
+            spriteRenderer.color = color;
         }
     }
 }

@@ -1,3 +1,5 @@
+using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace DecoyFortress
@@ -52,7 +54,16 @@ namespace DecoyFortress
         /// 
         /// 初期値はNormal
         /// </summary>
-        [SerializeField] private DecoyFortressIDs fotressID = DecoyFortressIDs.Normal;
+        [SerializeField] private DecoyFortressIDs fortressID = DecoyFortressIDs.Normal;
+
+        [SerializeField] private DecoyFortressRange range;
+        [SerializeField] private float effectRange = 2f;
+
+        [SerializeField] private SpriteRenderer fortressSpriteRenderer;
+        [SerializeField] private GameObject beforeVisual;
+        [SerializeField] private GameObject spritePivot;
+        [SerializeField] private Transform AfterVisual;
+
         /// <summary>
         /// 罠砦の初期化処理
         /// 
@@ -62,8 +73,15 @@ namespace DecoyFortress
         {
             fortressHP = FortressMaxHP;
 
+            if(range != null)
+            {
+                range.SetRadius(effectRange);
+            }
+
             // 有効フラグの状態に合わせてUIを動的生成・初期化
             HandleUIInitialization();
+
+            UpdateAppearance();
         }
 
         /// <summary>
@@ -96,6 +114,14 @@ namespace DecoyFortress
             }
         }
 
+        public void OnUpdate()
+        {
+            if (fortressID == DecoyFortressIDs.Stop) return;
+            if (!fortressEnabled) return;
+
+            UpdateRotation();
+        }
+
         /// <summary>
         /// 罠砦がダメージを受けたときの処理
         /// (Enemyクラスなどから呼ばれる)
@@ -115,6 +141,7 @@ namespace DecoyFortress
                 {
                     fortressUI.UpdateHP(fortressHP);
                     fortressUI.SetActive(false); // 壊れたら非表示
+                    UpdateAppearance();
                 }
             }
             else
@@ -153,6 +180,9 @@ namespace DecoyFortress
             {
                 fortressUI.SetActive(fortressEnabled);
             }
+
+            ResetRotation();
+            UpdateAppearance();
         }
 
         /// <summary>
@@ -172,7 +202,37 @@ namespace DecoyFortress
         /// <returns>罠砦ID</returns>
         public DecoyFortressIDs GetID()
         {
-            return this.fotressID;
+            return this.fortressID;
+        }
+
+        /// <summary>
+        /// 見た目のスプライトを変更する
+        /// </summary>
+        private void UpdateAppearance()
+        {
+            beforeVisual.SetActive(!fortressEnabled);
+            spritePivot.SetActive(fortressEnabled);
+
+            if (range != null)
+            {
+                range.SetRangeVisible(fortressEnabled); 
+            }
+        }
+
+        /// <summary>
+        /// sword,candleを回す
+        /// </summary>
+        public void UpdateRotation()
+        {
+            AfterVisual.Rotate(0f, 0f, 50f * Time.deltaTime);
+        }
+
+        /// <summary>
+        /// 回転を元に戻す
+        /// </summary>
+        private void ResetRotation()
+        {
+            AfterVisual.Rotate(0,0,0);
         }
     }
 }
