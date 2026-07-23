@@ -29,7 +29,7 @@ namespace Play
         [Header("ゲーム中フラグ")]
         [SerializeField] private bool gaming = false;
 
-        [SerializeField] private Image backgroundPanel;
+        [SerializeField] private SpriteRenderer backgroundPanel;
 
         void Awake()
         {
