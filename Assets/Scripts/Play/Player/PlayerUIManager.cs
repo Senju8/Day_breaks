@@ -318,8 +318,8 @@ namespace Player
                 {
                     slotHolder.rectTransform.anchoredPosition = new
                     (
-                        this.canvasTransform.sizeDelta.x / 2.0F - width * 2.0F,
-                        (this.canvasTransform.sizeDelta.y / 2.0F - width * 2.0F) * cos
+                        Screen.width / 2.0F - width * 2.0F,
+                        (Screen.height / 2.0F - width * 2.0F) * cos
                     );
 
                     slotHolder.rectTransform.anchoredPosition += this.slotOffsets != null ? this.slotOffsets : Vector2.zero;
